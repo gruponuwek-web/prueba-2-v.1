@@ -1,18 +1,31 @@
-// config.js - CONEXIÓN A SUPABASE
-// Las credenciales se cargan desde .env.local (no subidas a GitHub)
+// config.js - CONEXIÓN A SUPABASE (VERSIÓN CORREGIDA)
+// Para proyectos HTML/JS en el navegador, las credenciales van aquí directamente
+
+// ⚠️ IMPORTANTE: En producción (GitHub Pages), estas credenciales son públicas
+// Pero Supabase está diseñado para esto (anon key es pública por defecto)
+// Lo importante es que .env.local NO se suba a GitHub (está en .gitignore)
 
 const SUPABASE_URL = 'https://vuxuwgwhbseyhhiypcrg.supabase.co';
-// En producción, carga esto desde variables de entorno:
-// const SUPABASE_KEY = process.env.SUPABASE_ANON_KEY;
+const SUPABASE_KEY = 'WLvkNqRRej-K2v6CoVRA_-jX5BR5n'; // Clave anon pública
 
-// Para desarrollo local, crear archivo .env.local y usar este código:
-const SUPABASE_KEY = 'WLvkNqRRej-K2v6CoVRA_-jX5BR5n'; // Solo para desarrollo local
+// Verificar que Supabase esté disponible
+if (!window.supabase) {
+  console.error('❌ Supabase no se cargó. Verifica que el CDN está accesible.');
+}
 
 // Inicializar Supabase
 const { createClient } = window.supabase;
-const supabaseClient = createClient(SUPABASE_URL, SUPABASE_KEY);
 
-// Variables globales
+let supabaseClient;
+
+try {
+  supabaseClient = createClient(SUPABASE_URL, SUPABASE_KEY);
+  console.log('✅ Cliente Supabase inicializado');
+} catch (err) {
+  console.error('❌ Error al inicializar Supabase:', err.message);
+}
+
+// Nombres de tablas (para referencia)
 const db = {
   clientes: 'clientes',
   mesas: 'mesas',
@@ -28,22 +41,37 @@ const db = {
 // Función para probar conexión
 async function testConnection() {
   try {
+    console.log('🔄 Probando conexión a Supabase...');
+    
     const { data, error } = await supabaseClient
       .from(db.productos)
       .select('*')
       .limit(1);
     
     if (error) {
-      console.error('❌ Error de conexión:', error.message);
+      console.error('❌ Error de Supabase:', error.message);
+      const statusEl = document.getElementById('connection-status');
+      if (statusEl) statusEl.innerHTML = '❌ ' + error.message;
       return false;
     }
+    
     console.log('✅ Conexión a Supabase exitosa');
+    const statusEl = document.getElementById('connection-status');
+    if (statusEl) statusEl.innerHTML = '✅ Conectado a Supabase';
     return true;
   } catch (err) {
-    console.error('❌ Error:', err);
+    console.error('❌ Error de conexión:', err.message);
+    const statusEl = document.getElementById('connection-status');
+    if (statusEl) statusEl.innerHTML = '❌ ' + err.message;
     return false;
   }
 }
 
-// Inicializar al cargar la página
-window.addEventListener('DOMContentLoaded', testConnection);
+// Exportar para usar en otros archivos
+window.config = {
+  supabaseClient,
+  db,
+  testConnection
+};
+
+console.log('✅ config.js cargado correctamente');

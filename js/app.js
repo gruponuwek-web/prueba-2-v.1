@@ -1,4 +1,20 @@
-// app.js - LÓGICA DEL SISTEMA DE RESTAURANTE
+// app.js - LÓGICA DEL SISTEMA DE RESTAURANTE (VERSIÓN CORREGIDA)
+
+// Helper para obtener cliente desde config
+const getClient = () => {
+  if (!window.config || !window.config.supabaseClient) {
+    console.error('❌ Supabase no está inicializado');
+    return null;
+  }
+  return window.config.supabaseClient;
+};
+
+const getDb = () => {
+  if (!window.config || !window.config.db) {
+    return {};
+  }
+  return window.config.db;
+};
 
 // ============================================
 // PRODUCTOS - CRUD
@@ -6,11 +22,15 @@
 
 async function cargarProductos(id_categoria = null) {
   try {
-    let query = supabaseClient
+    const client = getClient();
+    const db = getDb();
+    if (!client) return [];
+    
+    let query = client
       .from(db.productos)
       .select(`
         *,
-        categorias!inner(nombre_categoria)
+        categorias(nombre_categoria)
       `)
       .eq('activo', true);
     
@@ -20,9 +40,12 @@ async function cargarProductos(id_categoria = null) {
     
     const { data, error } = await query;
     
-    if (error) throw error;
+    if (error) {
+      console.error('Error al cargar productos:', error);
+      return [];
+    }
     
-    return data;
+    return data || [];
   } catch (err) {
     console.error('Error al cargar productos:', err);
     return [];
@@ -31,7 +54,11 @@ async function cargarProductos(id_categoria = null) {
 
 async function crearProducto(producto) {
   try {
-    const { data, error } = await supabaseClient
+    const client = getClient();
+    const db = getDb();
+    if (!client) return null;
+    
+    const { data, error } = await client
       .from(db.productos)
       .insert([producto])
       .select();
@@ -47,7 +74,11 @@ async function crearProducto(producto) {
 
 async function actualizarProducto(id, cambios) {
   try {
-    const { data, error } = await supabaseClient
+    const client = getClient();
+    const db = getDb();
+    if (!client) return null;
+    
+    const { data, error } = await client
       .from(db.productos)
       .update(cambios)
       .eq('id_producto', id)
@@ -68,12 +99,16 @@ async function actualizarProducto(id, cambios) {
 
 async function cargarMesas() {
   try {
-    const { data, error } = await supabaseClient
+    const client = getClient();
+    const db = getDb();
+    if (!client) return [];
+    
+    const { data, error } = await client
       .from(db.mesas)
       .select('*');
     
     if (error) throw error;
-    return data;
+    return data || [];
   } catch (err) {
     console.error('Error al cargar mesas:', err);
     return [];
@@ -82,7 +117,11 @@ async function cargarMesas() {
 
 async function actualizarEstadoMesa(id_mesa, estado) {
   try {
-    const { data, error } = await supabaseClient
+    const client = getClient();
+    const db = getDb();
+    if (!client) return null;
+    
+    const { data, error } = await client
       .from(db.mesas)
       .update({ estado })
       .eq('id_mesa', id_mesa)
@@ -103,7 +142,11 @@ async function actualizarEstadoMesa(id_mesa, estado) {
 
 async function crearVenta(venta) {
   try {
-    const { data, error } = await supabaseClient
+    const client = getClient();
+    const db = getDb();
+    if (!client) return null;
+    
+    const { data, error } = await client
       .from(db.ventas)
       .insert([venta])
       .select();
@@ -119,7 +162,11 @@ async function crearVenta(venta) {
 
 async function crearDetalleVenta(detalles) {
   try {
-    const { data, error } = await supabaseClient
+    const client = getClient();
+    const db = getDb();
+    if (!client) return null;
+    
+    const { data, error } = await client
       .from(db.detalle_ventas)
       .insert(detalles)
       .select();
@@ -135,7 +182,11 @@ async function crearDetalleVenta(detalles) {
 
 async function cargarVentas(filtros = {}) {
   try {
-    let query = supabaseClient
+    const client = getClient();
+    const db = getDb();
+    if (!client) return [];
+    
+    let query = client
       .from(db.ventas)
       .select(`
         *,
@@ -162,7 +213,7 @@ async function cargarVentas(filtros = {}) {
     const { data, error } = await query.order('fecha_venta', { ascending: false });
     
     if (error) throw error;
-    return data;
+    return data || [];
   } catch (err) {
     console.error('Error al cargar ventas:', err);
     return [];
@@ -175,7 +226,11 @@ async function cargarVentas(filtros = {}) {
 
 async function crearCliente(cliente) {
   try {
-    const { data, error } = await supabaseClient
+    const client = getClient();
+    const db = getDb();
+    if (!client) return null;
+    
+    const { data, error } = await client
       .from(db.clientes)
       .insert([cliente])
       .select();
@@ -191,13 +246,17 @@ async function crearCliente(cliente) {
 
 async function cargarClientes() {
   try {
-    const { data, error } = await supabaseClient
+    const client = getClient();
+    const db = getDb();
+    if (!client) return [];
+    
+    const { data, error } = await client
       .from(db.clientes)
       .select('*')
       .order('nombre', { ascending: true });
     
     if (error) throw error;
-    return data;
+    return data || [];
   } catch (err) {
     console.error('Error al cargar clientes:', err);
     return [];
@@ -210,12 +269,16 @@ async function cargarClientes() {
 
 async function cargarCategorias() {
   try {
-    const { data, error } = await supabaseClient
+    const client = getClient();
+    const db = getDb();
+    if (!client) return [];
+    
+    const { data, error } = await client
       .from(db.categorias)
       .select('*');
     
     if (error) throw error;
-    return data;
+    return data || [];
   } catch (err) {
     console.error('Error al cargar categorías:', err);
     return [];
@@ -228,13 +291,17 @@ async function cargarCategorias() {
 
 async function cargarEmpleados() {
   try {
-    const { data, error } = await supabaseClient
+    const client = getClient();
+    const db = getDb();
+    if (!client) return [];
+    
+    const { data, error } = await client
       .from(db.empleados)
       .select('*')
       .eq('activo', true);
     
     if (error) throw error;
-    return data;
+    return data || [];
   } catch (err) {
     console.error('Error al cargar empleados:', err);
     return [];
@@ -247,10 +314,14 @@ async function cargarEmpleados() {
 
 async function obtenerReporteDiario(fecha) {
   try {
+    const client = getClient();
+    const db = getDb();
+    if (!client) return { total: 0, cantidad: 0, promedio: 0, ventas: [] };
+    
     const inicio = `${fecha}T00:00:00`;
     const fin = `${fecha}T23:59:59`;
     
-    const { data, error } = await supabaseClient
+    const { data, error } = await client
       .from(db.ventas)
       .select('*')
       .gte('fecha_venta', inicio)
@@ -271,10 +342,14 @@ async function obtenerReporteDiario(fecha) {
 
 async function obtenerProductosMasVendidos(dias = 30) {
   try {
+    const client = getClient();
+    const db = getDb();
+    if (!client) return [];
+    
     const fecha_inicio = new Date();
     fecha_inicio.setDate(fecha_inicio.getDate() - dias);
     
-    const { data, error } = await supabaseClient
+    const { data, error } = await client
       .from(db.detalle_ventas)
       .select(`
         id_producto,
@@ -285,7 +360,6 @@ async function obtenerProductosMasVendidos(dias = 30) {
     
     if (error) throw error;
     
-    // Agrupar por producto
     const productos = {};
     data.forEach(item => {
       const id = item.id_producto;
@@ -348,39 +422,24 @@ function formatearDinero(cantidad) {
 
 // Exportar para usarlas en otros archivos
 window.restaurante = {
-  // Productos
   cargarProductos,
   crearProducto,
   actualizarProducto,
-  
-  // Mesas
   cargarMesas,
   actualizarEstadoMesa,
-  
-  // Ventas
   crearVenta,
   crearDetalleVenta,
   cargarVentas,
-  
-  // Clientes
   crearCliente,
   cargarClientes,
-  
-  // Categorías
   cargarCategorias,
-  
-  // Empleados
   cargarEmpleados,
-  
-  // Reportes
   obtenerReporteDiario,
   obtenerProductosMasVendidos,
-  
-  // Validaciones
   validarVenta,
   validarProducto,
-  
-  // Utilidades
   formatearFecha,
   formatearDinero
 };
+
+console.log('✅ app.js cargado correctamente');

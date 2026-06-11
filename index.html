@@ -556,7 +556,7 @@
   }
 
   async function testConnection() {
-    const result = await supabaseClient.from(db.productos).select('*').limit(1);
+    const result = await supabaseClient.from(window.db.productos).select('*').limit(1);
     const status = document.getElementById('connection-status');
     const configStatus = document.getElementById('config-db-status');
     

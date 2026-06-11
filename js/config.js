@@ -1,56 +1,39 @@
-// config.js - SUPABASE AUTH (SEGURO)
+// ========================================
+// CONFIG.JS - CONFIGURACIÓN SUPABASE
+// ========================================
+
 console.log('✅ config.js cargando...');
 
+// Verificar que Supabase.js cargó
+if (typeof window.supabase === 'undefined') {
+  console.error('❌ ERROR: supabase-js no cargó correctamente');
+  console.error('   Revisa que el CDN está en el HTML:');
+  console.error('   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.38.1"></script>');
+}
+
+// Credenciales Supabase
 const SUPABASE_URL = 'https://vuxuwgwhbseyhhiypcrg.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_rRvknKmMBSccHt-iTib87g_ObEaa2UR';
 
-const { createClient } = window.supabase;
-const supabaseClient = createClient(SUPABASE_URL, SUPABASE_KEY);
+// Inicializar cliente Supabase SOLO UNA VEZ
+let supabaseClient = null;
 
-// Variables globales
-window.db = {
-  clientes: 'clientes',
-  mesas: 'mesas',
-  empleados: 'empleados',
-  categorias: 'categorias',
-  metodos_pago: 'metodos_pago',
-  productos: 'productos',
-  ventas: 'ventas',
-  detalle_ventas: 'detalle_ventas',
-  perfiles: 'perfiles'
+try {
+  const { createClient } = window.supabase;
+  supabaseClient = createClient(SUPABASE_URL, SUPABASE_KEY);
+  console.log('✅ Cliente Supabase inicializado');
+} catch (err) {
+  console.error('❌ Error inicializando Supabase:', err);
+}
+
+// Exportar como window.config para acceso global
+window.config = {
+  supabaseClient: supabaseClient,
+  SUPABASE_URL: SUPABASE_URL,
+  SUPABASE_KEY: SUPABASE_KEY
 };
 
-// Exportar para acceso global
+// Alias global para compatibilidad
 window.supabaseClient = supabaseClient;
-window.config = { supabaseClient, SUPABASE_URL, SUPABASE_KEY };
-
-// Listener de cambios de autenticación
-supabaseClient.auth.onAuthStateChange(async (event, session) => {
-  console.log('🔐 Auth event:', event);
-  
-  if (event === 'SIGNED_IN' && session) {
-    // Usuario inició sesión
-    const user = session.user;
-    localStorage.setItem('supabase.auth.token', session.access_token);
-    localStorage.setItem('usuarioActual', JSON.stringify({
-      id: user.id,
-      email: user.email,
-      session: session
-    }));
-    console.log('✅ Usuario autenticado:', user.email);
-    
-  } else if (event === 'SIGNED_OUT') {
-    // Usuario cerró sesión
-    localStorage.removeItem('supabase.auth.token');
-    localStorage.removeItem('usuarioActual');
-    console.log('🚪 Sesión cerrada');
-  }
-});
-
-// Obtener sesión actual
-async function obtenerSesionActual() {
-  const { data } = await supabaseClient.auth.getSession();
-  return data.session;
-}
 
 console.log('✅ config.js cargado correctamente');

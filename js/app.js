@@ -1,20 +1,6 @@
 // ========================================
 // APP.JS - SISTEMA DE GESTIÓN RESTAURANTE
 // ========================================
-
-let currentSection = 'dashboard';
-const db = {
-  productos: 'productos',
-  categorias: 'categorias',
-  clientes: 'clientes',
-  mesas: 'mesas',
-  empleados: 'empleados',
-  metodos_pago: 'metodos_pago',
-  ventas: 'ventas',
-  detalle_ventas: 'detalle_ventas',
-  usuarios: 'usuarios'
-};
-
 // ========================================
 // INICIALIZACIÓN
 // ========================================

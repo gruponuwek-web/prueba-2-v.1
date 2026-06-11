@@ -8,7 +8,7 @@ const { createClient } = window.supabase;
 const supabaseClient = createClient(SUPABASE_URL, SUPABASE_KEY);
 
 // Variables globales
-const db = {
+window.db = {
   clientes: 'clientes',
   mesas: 'mesas',
   empleados: 'empleados',
@@ -17,8 +17,12 @@ const db = {
   productos: 'productos',
   ventas: 'ventas',
   detalle_ventas: 'detalle_ventas',
-  perfiles: 'perfiles' // Tabla de perfiles en lugar de usuarios
+  perfiles: 'perfiles'
 };
+
+// Exportar para acceso global
+window.supabaseClient = supabaseClient;
+window.config = { supabaseClient, SUPABASE_URL, SUPABASE_KEY };
 
 // Listener de cambios de autenticación
 supabaseClient.auth.onAuthStateChange(async (event, session) => {

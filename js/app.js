@@ -467,6 +467,11 @@ window.guardarEditarUsuarioModal = async function() {
   } else alert('❌ Error');
 };
 
+window.cerrarModalUsuario = function() {
+  document.getElementById('modal-editar-usuario').style.display = 'none';
+  window.usuarioEnEdicion = null;
+};
+
 window.eliminarUsuarioConfirm = async function(id) {
   if (!confirm('¿Eliminar usuario?')) return;
   if (await restaurante.eliminarUsuario(id)) { alert('✅ Eliminado'); window.cargarDatos(); }

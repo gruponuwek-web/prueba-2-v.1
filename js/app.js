@@ -487,23 +487,62 @@ window.guardarEditarMesaModal = async function() {
 };
 
 // ===== CRUD VENTAS =====
+window.cargarDetallesVenta = async function(idVenta) {
+  try {
+    const { data, error } = await window.supabaseClient
+      .from('detalle_ventas')
+      .select('*, productos(nombre_producto, precio)')
+      .eq('id_venta', idVenta);
+    
+    if (error) return [];
+    return data || [];
+  } catch (e) {
+    console.error('Error cargarDetallesVenta:', e);
+    return [];
+  }
+};
+
 window.abrirEditarVenta = async function(id) {
   const ventas = await restaurante.cargarVentas();
   const venta = ventas.find(v => v.id_venta === id);
   if (!venta) { alert('No encontrada'); return; }
+  
   window.ventaEnEdicion = venta;
+  
   const clientes = await restaurante.cargarClientes();
   const mesas = await restaurante.cargarMesas();
+  const detalles = await window.cargarDetallesVenta(id);
+  
   let clienteHtml = '<option value="">-- Mostrador --</option>';
   clientes.forEach(c => clienteHtml += `<option value="${c.id_cliente}" ${venta.id_cliente === c.id_cliente ? 'selected' : ''}>${c.nombre}</option>`);
   document.getElementById('modal-venta-cliente').innerHTML = clienteHtml;
+  
   let mesaHtml = '<option value="">-- Ninguna --</option>';
   mesas.forEach(m => mesaHtml += `<option value="${m.id_mesa}" ${venta.id_mesa === m.id_mesa ? 'selected' : ''}>Mesa ${m.numero_mesa}</option>`);
   document.getElementById('modal-venta-mesa').innerHTML = mesaHtml;
+  
   document.getElementById('modal-venta-metodo').value = venta.id_metodo_pago || '1';
   document.getElementById('modal-venta-estado').value = venta.estatus || 'Pagada';
   document.getElementById('modal-venta-total').value = venta.total.toFixed(2);
   document.getElementById('modal-venta-fecha').value = venta.fecha_venta ? venta.fecha_venta.split('T')[0] : '';
+  
+  // Mostrar detalles de productos
+  const detallesHtml = detalles.map(d => `
+    <div style="padding: 0.5rem 0; border-bottom: 1px solid #eee; font-size: 0.9rem;">
+      <strong>${d.productos?.nombre_producto || 'Producto'}</strong> - 
+      Cantidad: ${d.cantidad} × ${restaurante.formatearDinero(d.precio_unitario)} = ${restaurante.formatearDinero(d.subtotal)}
+    </div>
+  `).join('');
+  
+  const detallesDiv = document.getElementById('modal-venta-detalles');
+  if (!detallesDiv) {
+    const nuevaDiv = document.createElement('div');
+    nuevaDiv.id = 'modal-venta-detalles';
+    nuevaDiv.style.cssText = 'margin: 1rem 0; padding: 1rem; background: #f5f5f5; border-radius: 5px;';
+    document.getElementById('modal-editar-venta').querySelector('h2').after(nuevaDiv);
+  }
+  document.getElementById('modal-venta-detalles').innerHTML = `<strong>Productos:</strong>${detallesHtml || '<p style="color: #999;">Sin productos</p>'}`;
+  
   document.getElementById('modal-editar-venta').style.display = 'flex';
 };
 
@@ -536,22 +575,88 @@ window.agregarProductoAlCarrito = async function() {
   const producto = productos.find(p => p.id_producto === parseInt(idProducto));
   if (producto) {
     const existe = restaurante.carrito.find(p => p.id_producto === producto.id_producto);
-    if (existe) existe.cantidad++;
-    else restaurante.carrito.push({ ...producto, cantidad: 1 });
+    if (existe) {
+      existe.cantidad++;
+    } else {
+      restaurante.carrito.push({ ...producto, cantidad: 1 });
+    }
+    window.actualizarTablaCarrito();
+    document.getElementById('venta-producto').value = '';
   }
 };
 
+window.actualizarTablaCarrito = function() {
+  const tbody = document.getElementById('tabla-carrito')?.querySelector('tbody');
+  if (!tbody) return;
+  
+  tbody.innerHTML = '';
+  let subtotal = 0;
+
+  restaurante.carrito.forEach((item, idx) => {
+    const itemSubtotal = item.precio * item.cantidad;
+    subtotal += itemSubtotal;
+
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${item.nombre_producto}</td>
+      <td><input type="number" min="1" value="${item.cantidad}" onchange="window.cambiarCantidadCarrito(${idx}, this.value)" style="width: 60px;"></td>
+      <td>${restaurante.formatearDinero(item.precio)}</td>
+      <td>${restaurante.formatearDinero(itemSubtotal)}</td>
+      <td><button class="btn btn-small btn-danger" onclick="window.eliminarDelCarrito(${idx})">X</button></td>
+    `;
+    tbody.appendChild(tr);
+  });
+
+  const iva = subtotal * 0.16;
+  const total = subtotal + iva;
+
+  document.getElementById('venta-subtotal').textContent = restaurante.formatearDinero(subtotal);
+  document.getElementById('venta-iva').textContent = restaurante.formatearDinero(iva);
+  document.getElementById('venta-total').textContent = restaurante.formatearDinero(total);
+};
+
+window.cambiarCantidadCarrito = function(idx, cantidad) {
+  restaurante.carrito[idx].cantidad = Math.max(1, parseInt(cantidad));
+  window.actualizarTablaCarrito();
+};
+
+window.eliminarDelCarrito = function(idx) {
+  restaurante.carrito.splice(idx, 1);
+  window.actualizarTablaCarrito();
+};
+
 window.registrarVenta = async function() {
-  if (restaurante.carrito.length === 0) { alert('Agregar productos'); return; }
+  if (restaurante.carrito.length === 0) { alert('❌ Agregar productos'); return; }
   const idCliente = document.getElementById('venta-cliente').value;
   const idMesa = document.getElementById('venta-mesa').value;
   const subtotal = restaurante.carrito.reduce((s, item) => s + (item.precio * item.cantidad), 0);
   const iva = subtotal * 0.16;
   const total = subtotal + iva;
-  const venta = { id_cliente: idCliente ? parseInt(idCliente) : null, id_mesa: idMesa ? parseInt(idMesa) : null, id_empleado: 1, id_metodo_pago: 1, fecha_venta: new Date().toISOString(), subtotal, iva, total, estatus: 'Pagada' };
-  const detalles = restaurante.carrito.map(item => ({ id_producto: item.id_producto, cantidad: item.cantidad, precio_unitario: item.precio, subtotal: item.precio * item.cantidad }));
-  if (await restaurante.crearVenta(venta, detalles)) { alert('✅ Venta registrada'); restaurante.carrito = []; window.cargarDatos(); }
-  else alert('❌ Error');
+  const venta = { 
+    id_cliente: idCliente ? parseInt(idCliente) : null, 
+    id_mesa: idMesa ? parseInt(idMesa) : null, 
+    id_empleado: 1, 
+    id_metodo_pago: 1, 
+    fecha_venta: new Date().toISOString(), 
+    subtotal, 
+    iva, 
+    total, 
+    estatus: 'Pagada' 
+  };
+  const detalles = restaurante.carrito.map(item => ({ 
+    id_producto: item.id_producto, 
+    cantidad: item.cantidad, 
+    precio_unitario: item.precio, 
+    subtotal: item.precio * item.cantidad 
+  }));
+  if (await restaurante.crearVenta(venta, detalles)) { 
+    alert('✅ Venta registrada'); 
+    restaurante.carrito = []; 
+    window.actualizarTablaCarrito();
+    document.getElementById('venta-cliente').value = '';
+    document.getElementById('venta-mesa').value = '';
+    window.cargarDatos(); 
+  } else alert('❌ Error');
 };
 
 console.log('✅ app.js cargado correctamente');

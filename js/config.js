@@ -5,7 +5,7 @@
 // Pero Supabase está diseñado para esto (anon key es pública por defecto)
 // Lo importante es que .env.local NO se suba a GitHub (está en .gitignore)
 
-const SUPABASE_URL = 'https://vuxuwgwhbseyhhiypcrg.supabase.co/rest/v1/';
+const SUPABASE_URL = 'https://vuxuwgwhbseyhhiypcrg.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_rRvknKmMBSccHt-iTib87g_ObEaa2UR'; // Clave completa
 
 // Verificar que Supabase esté disponible

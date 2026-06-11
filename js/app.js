@@ -32,11 +32,11 @@ window.restaurante = {
       const { data, error } = await window.supabaseClient
         .from('mesas')
         .select('*')
-        .order('numero');
+        .order('numero_mesa');
       if (error) throw error;
       return (data || []).map(m => ({
-        id_mesa: m.id,
-        numero_mesa: m.numero,
+        id_mesa: m.id_mesa,
+        numero_mesa: m.numero_mesa,
         capacidad: m.capacidad,
         estado: m.estado
       }));
@@ -54,7 +54,7 @@ window.restaurante = {
         .order('nombre');
       if (error) throw error;
       return (data || []).map(e => ({
-        id_empleado: e.id,
+        id_empleado: e.id_empleado,
         nombre: e.nombre,
         puesto: e.puesto || '-',
         telefono: e.telefono || '-'
@@ -73,8 +73,8 @@ window.restaurante = {
         .order('nombre_categoria');
       if (error) throw error;
       return (data || []).map(c => ({
-        id_categoria: c.id,
-        nombre_categoria: c.nombre_categoria || c.nombre
+        id_categoria: c.id_categoria,
+        nombre_categoria: c.nombre_categoria
       }));
     } catch (err) {
       console.error('❌ Error cargando categorías:', err);
@@ -86,16 +86,16 @@ window.restaurante = {
     try {
       const { data, error } = await window.supabaseClient
         .from('productos')
-        .select('*, categorias(id, nombre_categoria)')
-        .order('nombre');
+        .select('*, categorias(id_categoria, nombre_categoria)')
+        .order('nombre_producto');
       if (error) throw error;
       return (data || []).map(p => ({
-        id_producto: p.id,
-        nombre_producto: p.nombre,
+        id_producto: p.id_producto,
+        nombre_producto: p.nombre_producto,
         precio: p.precio,
         descripcion: p.descripcion,
         categorias: {
-          id_categoria: p.categorias?.id,
+          id_categoria: p.categorias?.id_categoria,
           nombre_categoria: p.categorias?.nombre_categoria
         }
       }));
@@ -110,8 +110,8 @@ window.restaurante = {
       const { data, error } = await window.supabaseClient
         .from('productos')
         .insert({
-          nombre: producto.nombre_producto,
-          categoria_id: producto.id_categoria,
+          nombre_producto: producto.nombre_producto,
+          id_categoria: producto.id_categoria,
           precio: producto.precio,
           descripcion: producto.descripcion || null
         });
@@ -137,17 +137,17 @@ window.restaurante = {
     try {
       const { data, error } = await window.supabaseClient
         .from('ventas')
-        .select('id, fecha_venta, monto, clientes(nombre), mesas(numero), empleados(nombre), metodos_pago(nombre)')
+        .select('id_venta, fecha_venta, total, clientes(nombre), mesas(numero_mesa), empleados(nombre), metodos_pago(nombre_metodo)')
         .order('fecha_venta', { ascending: false });
       if (error) throw error;
       return (data || []).map(v => ({
-        id_venta: v.id,
+        id_venta: v.id_venta,
         fecha_venta: v.fecha_venta,
-        total: v.monto,
+        total: v.total,
         clientes: { nombre: v.clientes?.nombre || 'Mostrador' },
-        mesas: { numero_mesa: v.mesas?.numero || '-' },
+        mesas: { numero_mesa: v.mesas?.numero_mesa || '-' },
         empleados: { nombre: v.empleados?.nombre || '-' },
-        metodos_pago: { nombre_metodo: v.metodos_pago?.nombre || '-' }
+        metodos_pago: { nombre_metodo: v.metodos_pago?.nombre_metodo || '-' }
       }));
     } catch (err) {
       console.error('❌ Error cargando ventas:', err);
@@ -179,13 +179,13 @@ window.restaurante = {
     try {
       const { data, error } = await window.supabaseClient
         .from('ventas')
-        .select('monto')
+        .select('total')
         .gte('fecha_venta', fecha + 'T00:00:00')
         .lte('fecha_venta', fecha + 'T23:59:59');
       if (error) throw error;
       const ventas = data || [];
       const cantidad = ventas.length;
-      const total = ventas.reduce((s, v) => s + (v.monto || 0), 0);
+      const total = ventas.reduce((s, v) => s + (v.total || 0), 0);
       const promedio = cantidad > 0 ? total / cantidad : 0;
       return { fecha, cantidad, total, promedio };
     } catch (err) {
@@ -200,11 +200,18 @@ window.restaurante = {
       fechaInicio.setDate(fechaInicio.getDate() - dias);
       const { data, error } = await window.supabaseClient
         .from('detalle_ventas')
-        .select('cantidad, precio_unitario, productos(nombre)');
+        .select('cantidad, precio_unitario, productos(nombre_producto), ventas(fecha_venta)');
       if (error) throw error;
+      
+      // Filtrar por fecha
+      const filtered = (data || []).filter(item => {
+        const venta_fecha = new Date(item.ventas?.fecha_venta || '');
+        return venta_fecha >= fechaInicio;
+      });
+      
       const agrupado = {};
-      (data || []).forEach(item => {
-        const nombre = item.productos?.nombre || 'Desconocido';
+      filtered.forEach(item => {
+        const nombre = item.productos?.nombre_producto || 'Desconocido';
         if (!agrupado[nombre]) agrupado[nombre] = { nombre, cantidad: 0, ingresos: 0 };
         agrupado[nombre].cantidad += item.cantidad || 0;
         agrupado[nombre].ingresos += (item.cantidad || 0) * (item.precio_unitario || 0);

@@ -6,7 +6,7 @@
 // Lo importante es que .env.local NO se suba a GitHub (está en .gitignore)
 
 const SUPABASE_URL = 'https://vuxuwgwhbseyhhiypcrg.supabase.co/rest/v1/';
-const SUPABASE_KEY = 'sb_publishable_O2P4R_Dsh_b-MbtnAervFg_KO08zArl'; // Clave completa
+const SUPABASE_KEY = 'sb_publishable_rRvknKmMBSccHt-iTib87g_ObEaa2UR'; // Clave completa
 
 // Verificar que Supabase esté disponible
 if (!window.supabase) {

@@ -1,74 +1,48 @@
 console.log('✅ app.js cargando...');
 
 window.restaurante = {
-  formatearDinero(cantidad) {
-    return new Intl.NumberFormat('es-MX', {
-      style: 'currency',
-      currency: 'MXN'
-    }).format(cantidad || 0);
-  },
-
-  formatearFecha(fecha) {
-    if (!fecha) return '-';
-    return new Date(fecha).toLocaleDateString('es-MX');
-  },
-
-  // ===== CARRITO DE VENTAS =====
   carrito: [],
 
-  agregarAlCarrito(producto) {
-    const existe = this.carrito.find(item => item.id_producto === producto.id_producto);
+  // ===== CARRITO =====
+  agregarAlCarrito: function(producto) {
+    const existe = this.carrito.find(p => p.id_producto === producto.id_producto);
     if (existe) {
-      existe.cantidad += 1;
+      existe.cantidad++;
     } else {
-      this.carrito.push({
-        id_producto: producto.id_producto,
-        nombre_producto: producto.nombre_producto,
-        precio: producto.precio,
-        cantidad: 1
-      });
+      this.carrito.push({ ...producto, cantidad: 1 });
     }
     this.actualizarCarrito();
   },
 
-  eliminarDelCarrito(idProducto) {
-    this.carrito = this.carrito.filter(item => item.id_producto !== idProducto);
+  eliminarDelCarrito: function(idProducto) {
+    this.carrito = this.carrito.filter(p => p.id_producto !== idProducto);
     this.actualizarCarrito();
   },
 
-  cambiarCantidad(idProducto, cantidad) {
-    const item = this.carrito.find(item => item.id_producto === idProducto);
-    if (item && cantidad > 0) {
-      item.cantidad = cantidad;
-    } else if (cantidad <= 0) {
-      this.eliminarDelCarrito(idProducto);
-    }
+  cambiarCantidad: function(idProducto, cantidad) {
+    const item = this.carrito.find(p => p.id_producto === idProducto);
+    if (item) item.cantidad = Math.max(1, parseInt(cantidad));
     this.actualizarCarrito();
   },
 
-  actualizarCarrito() {
-    const tbody = document.getElementById('tabla-carrito').querySelector('tbody');
+  actualizarCarrito: function() {
+    const tbody = document.getElementById('tabla-carrito')?.querySelector('tbody');
+    if (!tbody) return;
+
     tbody.innerHTML = '';
-
-    if (this.carrito.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 1rem; color: #999;">Carrito vacío</td></tr>';
-      document.getElementById('venta-subtotal').textContent = '$0';
-      document.getElementById('venta-iva').textContent = '$0';
-      document.getElementById('venta-total').textContent = '$0';
-      return;
-    }
-
     let subtotal = 0;
+
     this.carrito.forEach(item => {
-      subtotal += item.precio * item.cantidad;
-      
+      const itemSubtotal = item.precio * item.cantidad;
+      subtotal += itemSubtotal;
+
       const tr = document.createElement('tr');
       tr.innerHTML = `
         <td>${item.nombre_producto}</td>
-        <td><input type="number" value="${item.cantidad}" min="1" onchange="restaurante.cambiarCantidad(${item.id_producto}, this.value)" style="width: 50px;"></td>
+        <td><input type="number" min="1" value="${item.cantidad}" onchange="window.restaurante.cambiarCantidad(${item.id_producto}, this.value)"></td>
         <td>${this.formatearDinero(item.precio)}</td>
-        <td>${this.formatearDinero(item.precio * item.cantidad)}</td>
-        <td><button class="btn btn-small btn-danger" onclick="restaurante.eliminarDelCarrito(${item.id_producto})">✕</button></td>
+        <td>${this.formatearDinero(itemSubtotal)}</td>
+        <td><button class="btn btn-small btn-danger" onclick="window.restaurante.eliminarDelCarrito(${item.id_producto})">X</button></td>
       `;
       tbody.appendChild(tr);
     });
@@ -82,485 +56,502 @@ window.restaurante = {
   },
 
   // ===== CLIENTES =====
-
-  async cargarClientes() {
+  cargarClientes: async function() {
     try {
-      const { data, error } = await window.supabaseClient
-        .from('clientes')
-        .select('*')
-        .order('nombre');
-      if (error) throw error;
-      return data || [];
-    } catch (err) {
-      console.error('❌ Error cargando clientes:', err);
+      const { data, error } = await window.supabaseClient.from('clientes').select('*').order('nombre');
+      return error ? [] : data || [];
+    } catch (e) {
+      console.error('Error cargarClientes:', e);
       return [];
     }
   },
 
-  async crearCliente(cliente) {
+  crearCliente: async function(datos) {
     try {
-      const { data, error } = await window.supabaseClient
-        .from('clientes')
-        .insert({
-          nombre: cliente.nombre,
-          telefono: cliente.telefono || null,
-          email: cliente.email || null,
-          fecha_registro: new Date().toISOString()
-        });
-      if (error) throw error;
-      console.log('✅ Cliente creado');
-      return data;
-    } catch (err) {
-      console.error('❌ Error:', err);
-      alert('❌ Error: ' + err.message);
+      const { data, error } = await window.supabaseClient.from('clientes').insert([datos]).select();
+      return error ? null : data?.[0];
+    } catch (e) {
+      console.error('Error crearCliente:', e);
       return null;
     }
   },
 
-  async actualizarCliente(idCliente, cliente) {
+  actualizarCliente: async function(id, datos) {
     try {
-      const { data, error } = await window.supabaseClient
-        .from('clientes')
-        .update({
-          nombre: cliente.nombre,
-          telefono: cliente.telefono || null,
-          email: cliente.email || null
-        })
-        .eq('id_cliente', idCliente);
-      if (error) throw error;
-      console.log('✅ Cliente actualizado');
-      return true;
-    } catch (err) {
-      console.error('❌ Error:', err);
-      alert('❌ Error: ' + err.message);
+      const { error } = await window.supabaseClient.from('clientes').update(datos).eq('id_cliente', id);
+      return !error;
+    } catch (e) {
+      console.error('Error actualizarCliente:', e);
       return false;
     }
   },
 
-  async eliminarCliente(idCliente) {
+  eliminarCliente: async function(id) {
     try {
-      const { error } = await window.supabaseClient
-        .from('clientes')
-        .delete()
-        .eq('id_cliente', idCliente);
-      if (error) throw error;
-      console.log('✅ Cliente eliminado');
-      return true;
-    } catch (err) {
-      console.error('❌ Error:', err);
-      alert('❌ Error: ' + err.message);
+      const { error } = await window.supabaseClient.from('clientes').delete().eq('id_cliente', id);
+      return !error;
+    } catch (e) {
+      console.error('Error eliminarCliente:', e);
+      return false;
+    }
+  },
+
+  // ===== PRODUCTOS =====
+  cargarProductos: async function() {
+    try {
+      const { data, error } = await window.supabaseClient.from('productos').select('*').eq('activo', true).order('nombre_producto');
+      return error ? [] : data || [];
+    } catch (e) {
+      console.error('Error cargarProductos:', e);
+      return [];
+    }
+  },
+
+  crearProducto: async function(datos) {
+    try {
+      const { data, error } = await window.supabaseClient.from('productos').insert([datos]).select();
+      return error ? null : data?.[0];
+    } catch (e) {
+      console.error('Error crearProducto:', e);
+      return null;
+    }
+  },
+
+  actualizarProducto: async function(id, datos) {
+    try {
+      const { error } = await window.supabaseClient.from('productos').update(datos).eq('id_producto', id);
+      return !error;
+    } catch (e) {
+      console.error('Error actualizarProducto:', e);
+      return false;
+    }
+  },
+
+  eliminarProducto: async function(id) {
+    try {
+      const { error } = await window.supabaseClient.from('productos').update({ activo: false }).eq('id_producto', id);
+      return !error;
+    } catch (e) {
+      console.error('Error eliminarProducto:', e);
       return false;
     }
   },
 
   // ===== MESAS =====
-
-  async cargarMesas() {
+  cargarMesas: async function() {
     try {
-      const { data, error } = await window.supabaseClient
-        .from('mesas')
-        .select('*')
-        .order('numero_mesa');
-      if (error) throw error;
-      return (data || []).map(m => ({
-        id_mesa: m.id_mesa,
-        numero_mesa: m.numero_mesa,
-        capacidad: m.capacidad,
-        estado: m.estado
-      }));
-    } catch (err) {
-      console.error('❌ Error cargando mesas:', err);
-      return [];
-    }
-  },
-
-  // ===== EMPLEADOS =====
-
-  async cargarEmpleados() {
-    try {
-      const { data, error } = await window.supabaseClient
-        .from('empleados')
-        .select('*')
-        .order('nombre');
-      if (error) throw error;
-      return (data || []).map(e => ({
-        id_empleado: e.id_empleado,
-        nombre: e.nombre,
-        puesto: e.puesto || '-',
-        telefono: e.telefono || '-'
-      }));
-    } catch (err) {
-      console.error('❌ Error cargando empleados:', err);
-      return [];
-    }
-  },
-
-  // ===== CATEGORÍAS =====
-
-  async cargarCategorias() {
-    try {
-      const { data, error } = await window.supabaseClient
-        .from('categorias')
-        .select('*')
-        .order('nombre_categoria');
-      if (error) throw error;
-      return (data || []).map(c => ({
-        id_categoria: c.id_categoria,
-        nombre_categoria: c.nombre_categoria
-      }));
-    } catch (err) {
-      console.error('❌ Error cargando categorías:', err);
-      return [];
-    }
-  },
-
-  // ===== PRODUCTOS =====
-
-  async cargarProductos() {
-    try {
-      const { data, error } = await window.supabaseClient
-        .from('productos')
-        .select('*, categorias(id_categoria, nombre_categoria)')
-        .order('nombre_producto');
-      if (error) throw error;
-      return (data || []).map(p => ({
-        id_producto: p.id_producto,
-        nombre_producto: p.nombre_producto,
-        precio: p.precio,
-        descripcion: p.descripcion,
-        categorias: {
-          id_categoria: p.categorias?.id_categoria,
-          nombre_categoria: p.categorias?.nombre_categoria
-        }
-      }));
-    } catch (err) {
-      console.error('❌ Error cargando productos:', err);
-      return [];
-    }
-  },
-
-  async crearProducto(producto) {
-    try {
-      const { data, error } = await window.supabaseClient
-        .from('productos')
-        .insert({
-          nombre_producto: producto.nombre_producto,
-          id_categoria: producto.id_categoria,
-          precio: producto.precio,
-          descripcion: producto.descripcion || null
-        });
-      if (error) throw error;
-      console.log('✅ Producto creado');
-      return data;
-    } catch (err) {
-      console.error('❌ Error:', err);
-      alert('❌ Error: ' + err.message);
-      return null;
-    }
-  },
-
-  async actualizarProducto(idProducto, producto) {
-    try {
-      const { data, error } = await window.supabaseClient
-        .from('productos')
-        .update({
-          nombre_producto: producto.nombre_producto,
-          id_categoria: producto.id_categoria,
-          precio: producto.precio,
-          descripcion: producto.descripcion || null
-        })
-        .eq('id_producto', idProducto);
-      if (error) throw error;
-      console.log('✅ Producto actualizado');
-      return true;
-    } catch (err) {
-      console.error('❌ Error:', err);
-      alert('❌ Error: ' + err.message);
-      return false;
-    }
-  },
-
-  async eliminarProducto(idProducto) {
-    try {
-      const { error } = await window.supabaseClient
-        .from('productos')
-        .delete()
-        .eq('id_producto', idProducto);
-      if (error) throw error;
-      console.log('✅ Producto eliminado');
-      return true;
-    } catch (err) {
-      console.error('❌ Error:', err);
-      alert('❌ Error: ' + err.message);
-      return false;
-    }
-  },
-
-  validarProducto(producto) {
-    const errors = [];
-    if (!producto.nombre_producto) errors.push('El nombre es requerido');
-    if (!producto.id_categoria) errors.push('La categoría es requerida');
-    if (producto.precio <= 0) errors.push('El precio debe ser mayor a 0');
-    return errors;
-  },
-
-  // ===== VENTAS =====
-
-  async cargarVentas() {
-    try {
-      const { data, error } = await window.supabaseClient
-        .from('ventas')
-        .select('id_venta, fecha_venta, total, clientes(nombre), mesas(numero_mesa), empleados(nombre), metodos_pago(nombre_metodo)')
-        .order('fecha_venta', { ascending: false });
-      if (error) throw error;
-      return (data || []).map(v => ({
-        id_venta: v.id_venta,
-        fecha_venta: v.fecha_venta,
-        total: v.total,
-        clientes: { nombre: v.clientes?.nombre || 'Mostrador' },
-        mesas: { numero_mesa: v.mesas?.numero_mesa || '-' },
-        empleados: { nombre: v.empleados?.nombre || '-' },
-        metodos_pago: { nombre_metodo: v.metodos_pago?.nombre_metodo || '-' }
-      }));
-    } catch (err) {
-      console.error('❌ Error cargando ventas:', err);
-      return [];
-    }
-  },
-
-  async crearVenta(venta, detalles) {
-    try {
-      if (!venta.id_empleado || !venta.id_metodo_pago) {
-        alert('❌ Empleado y método de pago son requeridos');
-        return null;
-      }
-      if (detalles.length === 0) {
-        alert('❌ Agrega al menos un producto');
-        return null;
-      }
-
-      // Calcular subtotal
-      const subtotal = detalles.reduce((sum, det) => sum + (det.cantidad * det.precio_unitario), 0);
-      const iva = subtotal * 0.16;
-      const total = subtotal + iva;
-
-      const { data: ventaData, error: ventaError } = await window.supabaseClient
-        .from('ventas')
-        .insert({
-          id_cliente: venta.id_cliente || null,
-          id_mesa: venta.id_mesa || null,
-          id_empleado: venta.id_empleado,
-          id_metodo_pago: venta.id_metodo_pago,
-          fecha_venta: new Date().toISOString(),
-          subtotal: subtotal,
-          iva: iva,
-          total: total,
-          estatus: 'pagada'
-        })
-        .select();
-
-      if (ventaError) throw ventaError;
-      const idVenta = ventaData[0].id_venta;
-
-      // Insertar detalles
-      const detallesConIdVenta = detalles.map(det => ({
-        id_venta: idVenta,
-        id_producto: det.id_producto,
-        cantidad: det.cantidad,
-        precio_unitario: det.precio_unitario,
-        subtotal: det.cantidad * det.precio_unitario
-      }));
-
-      const { error: detalleError } = await window.supabaseClient
-        .from('detalle_ventas')
-        .insert(detallesConIdVenta);
-
-      if (detalleError) throw detalleError;
-
-      console.log('✅ Venta creada exitosamente');
-      return ventaData[0];
-    } catch (err) {
-      console.error('❌ Error:', err);
-      alert('❌ Error: ' + err.message);
-      return null;
-    }
-  },
-
-  async obtenerReporteDiario(fecha) {
-    try {
-      const { data, error } = await window.supabaseClient
-        .from('ventas')
-        .select('total')
-        .gte('fecha_venta', fecha + 'T00:00:00')
-        .lte('fecha_venta', fecha + 'T23:59:59');
-      if (error) throw error;
-      const ventas = data || [];
-      const cantidad = ventas.length;
-      const total = ventas.reduce((s, v) => s + (v.total || 0), 0);
-      const promedio = cantidad > 0 ? total / cantidad : 0;
-      return { fecha, cantidad, total, promedio };
-    } catch (err) {
-      console.error('❌ Error:', err);
-      return { fecha, cantidad: 0, total: 0, promedio: 0 };
-    }
-  },
-
-  async actualizarVenta(idVenta, venta) {
-    try {
-      const { data, error } = await window.supabaseClient
-        .from('ventas')
-        .update({
-          id_cliente: venta.id_cliente || null,
-          id_mesa: venta.id_mesa || null,
-          id_empleado: venta.id_empleado,
-          id_metodo_pago: venta.id_metodo_pago
-        })
-        .eq('id_venta', idVenta);
-      if (error) throw error;
-      console.log('✅ Venta actualizada');
-      return true;
-    } catch (err) {
-      console.error('❌ Error:', err);
-      alert('❌ Error: ' + err.message);
-      return false;
-    }
-  },
-
-  async eliminarVenta(idVenta) {
-    try {
-      // Primero eliminar detalles
-      const { error: detalleError } = await window.supabaseClient
-        .from('detalle_ventas')
-        .delete()
-        .eq('id_venta', idVenta);
-      
-      if (detalleError) throw detalleError;
-
-      // Luego eliminar venta
-      const { error } = await window.supabaseClient
-        .from('ventas')
-        .delete()
-        .eq('id_venta', idVenta);
-      
-      if (error) throw error;
-      console.log('✅ Venta eliminada');
-      return true;
-    } catch (err) {
-      console.error('❌ Error:', err);
-      alert('❌ Error: ' + err.message);
-      return false;
-    }
-  },
-
-  async obtenerProductosMasVendidos(dias = 7) {
-    try {
-      const fechaInicio = new Date();
-      fechaInicio.setDate(fechaInicio.getDate() - dias);
-      const { data, error } = await window.supabaseClient
-        .from('detalle_ventas')
-        .select('cantidad, precio_unitario, productos(nombre_producto), ventas(fecha_venta)');
-      if (error) throw error;
-      
-      const filtered = (data || []).filter(item => {
-        const venta_fecha = new Date(item.ventas?.fecha_venta || '');
-        return venta_fecha >= fechaInicio;
-      });
-      
-      const agrupado = {};
-      filtered.forEach(item => {
-        const nombre = item.productos?.nombre_producto || 'Desconocido';
-        if (!agrupado[nombre]) agrupado[nombre] = { nombre, cantidad: 0, ingresos: 0 };
-        agrupado[nombre].cantidad += item.cantidad || 0;
-        agrupado[nombre].ingresos += (item.cantidad || 0) * (item.precio_unitario || 0);
-      });
-      return Object.values(agrupado).sort((a, b) => b.ingresos - a.ingresos);
-    } catch (err) {
-      console.error('❌ Error:', err);
+      const { data, error } = await window.supabaseClient.from('mesas').select('*').order('numero_mesa');
+      return error ? [] : data || [];
+    } catch (e) {
+      console.error('Error cargarMesas:', e);
       return [];
     }
   },
 
   // ===== USUARIOS =====
-
-  async cargarUsuarios() {
+  cargarUsuarios: async function() {
     try {
-      const { data, error } = await window.supabaseClient
-        .from('usuarios')
-        .select('*')
-        .order('fecha_creacion', { ascending: false });
-      if (error) throw error;
-      return data || [];
-    } catch (err) {
-      console.error('❌ Error cargando usuarios:', err);
+      const { data, error } = await window.supabaseClient.from('usuarios').select('*').eq('activo', true).order('nombre_usuario');
+      return error ? [] : data || [];
+    } catch (e) {
+      console.error('Error cargarUsuarios:', e);
       return [];
     }
   },
 
-  async crearUsuario(usuario) {
+  crearUsuario: async function(datos) {
     try {
-      if (!usuario.nombre_usuario || !usuario.email || !usuario.password || !usuario.rol) {
-        alert('❌ Todos los campos son requeridos');
-        return null;
-      }
-
-      const { data, error } = await window.supabaseClient
-        .from('usuarios')
-        .insert({
-          nombre_usuario: usuario.nombre_usuario,
-          email: usuario.email,
-          password: usuario.password,
-          rol: usuario.rol,
-          activo: true,
-          fecha_creacion: new Date().toISOString()
-        });
-      
-      if (error) throw error;
-      console.log('✅ Usuario creado:', data);
-      return data;
-    } catch (err) {
-      console.error('❌ Error creando usuario:', err);
-      alert('❌ Error: ' + err.message);
+      const { data, error } = await window.supabaseClient.from('usuarios').insert([datos]).select();
+      return error ? null : data?.[0];
+    } catch (e) {
+      console.error('Error crearUsuario:', e);
       return null;
     }
   },
 
-  async actualizarUsuario(idUsuario, usuario) {
+  actualizarUsuario: async function(id, datos) {
     try {
-      const { data, error } = await window.supabaseClient
-        .from('usuarios')
-        .update({
-          nombre_usuario: usuario.nombre_usuario,
-          email: usuario.email,
-          rol: usuario.rol,
-          activo: usuario.activo
-        })
-        .eq('id_usuario', idUsuario);
-      
-      if (error) throw error;
-      console.log('✅ Usuario actualizado');
-      return true;
-    } catch (err) {
-      console.error('❌ Error:', err);
-      alert('❌ Error: ' + err.message);
+      const { error } = await window.supabaseClient.from('usuarios').update(datos).eq('id_usuario', id);
+      return !error;
+    } catch (e) {
+      console.error('Error actualizarUsuario:', e);
       return false;
     }
   },
 
-  async eliminarUsuario(id) {
+  eliminarUsuario: async function(id) {
     try {
-      const { error } = await window.supabaseClient
-        .from('usuarios')
-        .delete()
-        .eq('id_usuario', id);
-      
-      if (error) throw error;
-      console.log('✅ Usuario eliminado');
-      return true;
-    } catch (err) {
-      console.error('❌ Error:', err);
-      alert('❌ Error: ' + err.message);
+      const { error } = await window.supabaseClient.from('usuarios').update({ activo: false }).eq('id_usuario', id);
+      return !error;
+    } catch (e) {
+      console.error('Error eliminarUsuario:', e);
       return false;
     }
+  },
+
+  // ===== VENTAS =====
+  cargarVentas: async function() {
+    try {
+      const { data, error } = await window.supabaseClient
+        .from('ventas')
+        .select(`
+          *,
+          clientes(nombre),
+          mesas(numero_mesa),
+          metodos_pago(nombre_metodo)
+        `)
+        .order('fecha_venta', { ascending: false });
+      return error ? [] : data || [];
+    } catch (e) {
+      console.error('Error cargarVentas:', e);
+      return [];
+    }
+  },
+
+  crearVenta: async function(venta, detalles) {
+    try {
+      // Insertar venta
+      const { data: ventaData, error: ventaError } = await window.supabaseClient
+        .from('ventas')
+        .insert([venta])
+        .select();
+
+      if (ventaError || !ventaData) throw ventaError;
+
+      const idVenta = ventaData[0].id_venta;
+
+      // Insertar detalles
+      const detallesConId = detalles.map(d => ({ ...d, id_venta: idVenta }));
+      const { error: detalleError } = await window.supabaseClient.from('detalle_ventas').insert(detallesConId);
+
+      if (detalleError) throw detalleError;
+
+      return true;
+    } catch (e) {
+      console.error('Error crearVenta:', e);
+      return false;
+    }
+  },
+
+  actualizarVenta: async function(id, datos) {
+    try {
+      const { error } = await window.supabaseClient.from('ventas').update(datos).eq('id_venta', id);
+      return !error;
+    } catch (e) {
+      console.error('Error actualizarVenta:', e);
+      return false;
+    }
+  },
+
+  eliminarVenta: async function(id) {
+    try {
+      // Eliminar detalles primero
+      await window.supabaseClient.from('detalle_ventas').delete().eq('id_venta', id);
+      // Luego eliminar venta
+      const { error } = await window.supabaseClient.from('ventas').delete().eq('id_venta', id);
+      return !error;
+    } catch (e) {
+      console.error('Error eliminarVenta:', e);
+      return false;
+    }
+  },
+
+  // ===== UTILIDADES =====
+  formatearDinero: function(monto) {
+    return new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(monto);
+  },
+
+  formatearFecha: function(fecha) {
+    if (!fecha) return '-';
+    return new Date(fecha).toLocaleDateString('es-MX');
+  }
+};
+
+// ===== CARRITO Y VENTAS =====
+window.agregarProductoAlCarrito = async function() {
+  const idProducto = document.getElementById('venta-producto').value;
+  if (!idProducto) {
+    alert('Selecciona un producto');
+    return;
+  }
+
+  const productos = await restaurante.cargarProductos();
+  const producto = productos.find(p => p.id_producto === parseInt(idProducto));
+  if (producto) {
+    restaurante.agregarAlCarrito(producto);
+  }
+};
+
+window.registrarVenta = async function() {
+  if (restaurante.carrito.length === 0) {
+    alert('❌ Agregar productos al carrito');
+    return;
+  }
+
+  const idCliente = document.getElementById('venta-cliente').value;
+  const idMesa = document.getElementById('venta-mesa').value;
+
+  const subtotal = restaurante.carrito.reduce((sum, item) => sum + (item.precio * item.cantidad), 0);
+  const iva = subtotal * 0.16;
+  const total = subtotal + iva;
+
+  const venta = {
+    id_cliente: idCliente ? parseInt(idCliente) : null,
+    id_mesa: idMesa ? parseInt(idMesa) : null,
+    id_empleado: 1,
+    id_metodo_pago: 1,
+    fecha_venta: new Date().toISOString(),
+    subtotal,
+    iva,
+    total,
+    estatus: 'Pagada'
+  };
+
+  const detalles = restaurante.carrito.map(item => ({
+    id_producto: item.id_producto,
+    cantidad: item.cantidad,
+    precio_unitario: item.precio,
+    subtotal: item.precio * item.cantidad
+  }));
+
+  const result = await restaurante.crearVenta(venta, detalles);
+  if (result) {
+    alert('✅ Venta registrada');
+    restaurante.carrito = [];
+    restaurante.actualizarCarrito();
+    document.getElementById('venta-cliente').value = '';
+    document.getElementById('venta-mesa').value = '';
+    window.cargarDatos();
+  } else {
+    alert('❌ Error al registrar venta');
+  }
+};
+
+// ===== CRUD CLIENTES =====
+window.crearCliente = async function() {
+  const nombre = document.getElementById('form-cliente-nombre').value.trim();
+  const telefono = document.getElementById('form-cliente-telefono').value.trim();
+  const email = document.getElementById('form-cliente-email').value.trim();
+
+  if (!nombre) {
+    alert('❌ Nombre requerido');
+    return;
+  }
+
+  const datos = { nombre, telefono, email, fecha_registro: new Date().toISOString() };
+  const result = await restaurante.crearCliente(datos);
+
+  if (result) {
+    alert('✅ Cliente creado');
+    document.getElementById('form-cliente-nombre').value = '';
+    document.getElementById('form-cliente-telefono').value = '';
+    document.getElementById('form-cliente-email').value = '';
+    window.cargarDatos();
+  } else {
+    alert('❌ Error al crear cliente');
+  }
+};
+
+window.eliminarCliente = async function(id) {
+  if (!confirm('¿Eliminar este cliente?')) return;
+  const result = await restaurante.eliminarCliente(id);
+  if (result) {
+    alert('✅ Cliente eliminado');
+    window.cargarDatos();
+  }
+};
+
+// ===== CRUD PRODUCTOS =====
+window.crearProducto = async function() {
+  const nombre = document.getElementById('form-producto-nombre').value.trim();
+  const precio = parseFloat(document.getElementById('form-producto-precio').value || 0);
+  const descripcion = document.getElementById('form-producto-desc').value.trim();
+
+  if (!nombre || precio <= 0) {
+    alert('❌ Completa los campos correctamente');
+    return;
+  }
+
+  const datos = { nombre_producto: nombre, precio, descripcion, id_categoria: 1, activo: true };
+  const result = await restaurante.crearProducto(datos);
+
+  if (result) {
+    alert('✅ Producto creado');
+    document.getElementById('form-producto-nombre').value = '';
+    document.getElementById('form-producto-precio').value = '';
+    document.getElementById('form-producto-desc').value = '';
+    window.cargarDatos();
+  } else {
+    alert('❌ Error al crear producto');
+  }
+};
+
+window.eliminarProducto = async function(id) {
+  if (!confirm('¿Eliminar este producto?')) return;
+  const result = await restaurante.eliminarProducto(id);
+  if (result) {
+    alert('✅ Producto eliminado');
+    window.cargarDatos();
+  }
+};
+
+// ===== CRUD USUARIOS =====
+window.crearUsuario = async function() {
+  const nombre = document.getElementById('form-usuario-nombre').value.trim();
+  const email = document.getElementById('form-usuario-email').value.trim();
+  const password = document.getElementById('form-usuario-password').value;
+  const rol = document.getElementById('form-usuario-rol').value;
+
+  if (!nombre || !email || !password) {
+    alert('❌ Completa todos los campos');
+    return;
+  }
+
+  const datos = { nombre_usuario: nombre, email, password, rol, activo: true, fecha_creacion: new Date().toISOString() };
+  const result = await restaurante.crearUsuario(datos);
+
+  if (result) {
+    alert('✅ Usuario creado');
+    document.getElementById('form-usuario-nombre').value = '';
+    document.getElementById('form-usuario-email').value = '';
+    document.getElementById('form-usuario-password').value = '';
+    window.cargarDatos();
+  } else {
+    alert('❌ Error al crear usuario');
+  }
+};
+
+window.eliminarUsuario = async function(id) {
+  if (!confirm('¿Eliminar este usuario?')) return;
+  const result = await restaurante.eliminarUsuario(id);
+  if (result) {
+    alert('✅ Usuario eliminado');
+    window.cargarDatos();
+  }
+};
+
+// ===== CARGAR DATOS INICIALES =====
+window.cargarDatos = async function() {
+  try {
+    // Cargar selectores
+    const clientes = await restaurante.cargarClientes();
+    const productos = await restaurante.cargarProductos();
+    const mesas = await restaurante.cargarMesas();
+    const usuarios = await restaurante.cargarUsuarios();
+    const ventas = await restaurante.cargarVentas();
+
+    // Selectores Ventas
+    let clienteHtml = '<option value="">-- Mostrador --</option>';
+    clientes.forEach(c => clienteHtml += `<option value="${c.id_cliente}">${c.nombre}</option>`);
+    document.getElementById('venta-cliente').innerHTML = clienteHtml;
+
+    let mesaHtml = '<option value="">-- Ninguna --</option>';
+    mesas.forEach(m => mesaHtml += `<option value="${m.id_mesa}">Mesa ${m.numero_mesa}</option>`);
+    document.getElementById('venta-mesa').innerHTML = mesaHtml;
+
+    let productoHtml = '<option value="">-- Selecciona --</option>';
+    productos.forEach(p => productoHtml += `<option value="${p.id_producto}">${p.nombre_producto} - ${restaurante.formatearDinero(p.precio)}</option>`);
+    document.getElementById('venta-producto').innerHTML = productoHtml;
+
+    // Tabla Clientes
+    const tablaClientes = document.getElementById('tabla-clientes')?.querySelector('tbody');
+    if (tablaClientes) {
+      tablaClientes.innerHTML = '';
+      clientes.forEach(c => {
+        const tr = document.createElement('tr');
+        tr.dataset.tipo = 'cliente';
+        tr.dataset.id = c.id_cliente;
+        tr.innerHTML = `
+          <td>${c.nombre}</td>
+          <td>${c.telefono || '-'}</td>
+          <td>${c.email || '-'}</td>
+          <td>
+            <button class="btn btn-small btn-info" onclick="window.abrirEditarFila(this)">Editar</button>
+            <button class="btn btn-small btn-danger" onclick="window.eliminarCliente(${c.id_cliente})">Eliminar</button>
+          </td>
+        `;
+        tablaClientes.appendChild(tr);
+      });
+    }
+
+    // Tabla Productos
+    const tablaProductos = document.getElementById('tabla-productos')?.querySelector('tbody');
+    if (tablaProductos) {
+      tablaProductos.innerHTML = '';
+      productos.forEach(p => {
+        const tr = document.createElement('tr');
+        tr.dataset.tipo = 'producto';
+        tr.dataset.id = p.id_producto;
+        tr.innerHTML = `
+          <td>${p.nombre_producto}</td>
+          <td>${restaurante.formatearDinero(p.precio)}</td>
+          <td>${p.descripcion || '-'}</td>
+          <td><span class="badge badge-success">Activo</span></td>
+          <td>
+            <button class="btn btn-small btn-info" onclick="window.abrirEditarFila(this)">Editar</button>
+            <button class="btn btn-small btn-danger" onclick="window.eliminarProducto(${p.id_producto})">Eliminar</button>
+          </td>
+        `;
+        tablaProductos.appendChild(tr);
+      });
+    }
+
+    // Tabla Usuarios
+    const tablaUsuarios = document.getElementById('tabla-usuarios')?.querySelector('tbody');
+    if (tablaUsuarios) {
+      tablaUsuarios.innerHTML = '';
+      usuarios.forEach(u => {
+        const tr = document.createElement('tr');
+        tr.dataset.tipo = 'usuario';
+        tr.dataset.id = u.id_usuario;
+        tr.innerHTML = `
+          <td>${u.nombre_usuario}</td>
+          <td>${u.email}</td>
+          <td>${u.rol}</td>
+          <td>
+            <button class="btn btn-small btn-info" onclick="window.abrirEditarFila(this)">Editar</button>
+            <button class="btn btn-small btn-danger" onclick="window.eliminarUsuario(${u.id_usuario})">Eliminar</button>
+          </td>
+        `;
+        tablaUsuarios.appendChild(tr);
+      });
+    }
+
+    // Tabla Mesas
+    const tablaMesas = document.getElementById('tabla-mesas')?.querySelector('tbody');
+    if (tablaMesas) {
+      tablaMesas.innerHTML = '';
+      mesas.forEach(m => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td>${m.numero_mesa}</td><td>${m.capacidad}</td><td>${m.ubicacion || '-'}</td><td>Disponible</td>`;
+        tablaMesas.appendChild(tr);
+      });
+    }
+
+    // Tabla Ventas
+    const tablaVentas = document.getElementById('tabla-ventas')?.querySelector('tbody');
+    if (tablaVentas) {
+      tablaVentas.innerHTML = '';
+      ventas.slice(0, 10).forEach(v => {
+        const tr = document.createElement('tr');
+        tr.dataset.tipo = 'venta';
+        tr.dataset.id = v.id_venta;
+        tr.innerHTML = `
+          <td>#${v.id_venta}</td>
+          <td>${restaurante.formatearFecha(v.fecha_venta)}</td>
+          <td>${v.clientes?.nombre || 'Mostrador'}</td>
+          <td>${restaurante.formatearDinero(v.total)}</td>
+          <td><span class="badge badge-success">${v.estatus}</span></td>
+          <td>
+            <button class="btn btn-small btn-danger" onclick="window.eliminarVenta(${v.id_venta})">Eliminar</button>
+          </td>
+        `;
+        tablaVentas.appendChild(tr);
+      });
+    }
+
+  } catch (e) {
+    console.error('Error cargarDatos:', e);
   }
 };
 

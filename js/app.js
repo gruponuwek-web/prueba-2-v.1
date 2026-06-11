@@ -487,6 +487,8 @@ window.guardarEditarMesaModal = async function() {
 };
 
 // ===== CRUD VENTAS =====
+window.detallesVentaEnEdicion = [];
+
 window.cargarDetallesVenta = async function(idVenta) {
   try {
     const { data, error } = await window.supabaseClient
@@ -495,11 +497,66 @@ window.cargarDetallesVenta = async function(idVenta) {
       .eq('id_venta', idVenta);
     
     if (error) return [];
+    window.detallesVentaEnEdicion = data || [];
     return data || [];
   } catch (e) {
     console.error('Error cargarDetallesVenta:', e);
     return [];
   }
+};
+
+window.mostrarDetallesVenta = function() {
+  const detallesHtml = window.detallesVentaEnEdicion.map((d, idx) => `
+    <div style="padding: 0.5rem; background: white; border-radius: 3px; margin-bottom: 0.3rem; display: flex; justify-content: space-between; align-items: center;">
+      <span><strong>${d.productos?.nombre_producto || 'Producto'}</strong> - Cant: ${d.cantidad} × ${restaurante.formatearDinero(d.precio_unitario)}</span>
+      <button class="btn btn-small btn-danger" onclick="window.eliminarProductoDeVenta(${idx})" style="padding: 0.3rem 0.6rem; font-size: 0.75rem;">X</button>
+    </div>
+  `).join('');
+  
+  document.getElementById('modal-venta-detalles').innerHTML = detallesHtml || '<p style="color: #999; font-size: 0.9rem;">Sin productos</p>';
+};
+
+window.agregarProductoAVenta = async function() {
+  const idProducto = document.getElementById('modal-venta-producto-agregar').value;
+  if (!idProducto) { alert('Selecciona un producto'); return; }
+  
+  const productos = await restaurante.cargarProductos();
+  const producto = productos.find(p => p.id_producto === parseInt(idProducto));
+  
+  if (producto) {
+    const existe = window.detallesVentaEnEdicion.find(d => d.id_producto === producto.id_producto);
+    
+    if (existe) {
+      existe.cantidad++;
+      existe.subtotal = existe.cantidad * existe.precio_unitario;
+    } else {
+      window.detallesVentaEnEdicion.push({
+        id_producto: producto.id_producto,
+        cantidad: 1,
+        precio_unitario: producto.precio,
+        subtotal: producto.precio,
+        productos: { nombre_producto: producto.nombre_producto, precio: producto.precio }
+      });
+    }
+    
+    window.mostrarDetallesVenta();
+    document.getElementById('modal-venta-producto-agregar').value = '';
+    window.actualizarTotalVentaModal();
+  }
+};
+
+window.eliminarProductoDeVenta = function(idx) {
+  if (!confirm('¿Eliminar producto?')) return;
+  window.detallesVentaEnEdicion.splice(idx, 1);
+  window.mostrarDetallesVenta();
+  window.actualizarTotalVentaModal();
+};
+
+window.actualizarTotalVentaModal = function() {
+  const subtotal = window.detallesVentaEnEdicion.reduce((sum, d) => sum + (d.subtotal || 0), 0);
+  const iva = subtotal * 0.16;
+  const total = subtotal + iva;
+  document.getElementById('modal-venta-total').value = total.toFixed(2);
 };
 
 window.abrirEditarVenta = async function(id) {
@@ -508,10 +565,11 @@ window.abrirEditarVenta = async function(id) {
   if (!venta) { alert('No encontrada'); return; }
   
   window.ventaEnEdicion = venta;
+  await window.cargarDetallesVenta(id);
   
   const clientes = await restaurante.cargarClientes();
   const mesas = await restaurante.cargarMesas();
-  const detalles = await window.cargarDetallesVenta(id);
+  const productos = await restaurante.cargarProductos();
   
   let clienteHtml = '<option value="">-- Mostrador --</option>';
   clientes.forEach(c => clienteHtml += `<option value="${c.id_cliente}" ${venta.id_cliente === c.id_cliente ? 'selected' : ''}>${c.nombre}</option>`);
@@ -521,28 +579,16 @@ window.abrirEditarVenta = async function(id) {
   mesas.forEach(m => mesaHtml += `<option value="${m.id_mesa}" ${venta.id_mesa === m.id_mesa ? 'selected' : ''}>Mesa ${m.numero_mesa}</option>`);
   document.getElementById('modal-venta-mesa').innerHTML = mesaHtml;
   
+  let productoHtml = '<option value="">-- Agregar producto --</option>';
+  productos.forEach(p => productoHtml += `<option value="${p.id_producto}">${p.nombre_producto} - ${restaurante.formatearDinero(p.precio)}</option>`);
+  document.getElementById('modal-venta-producto-agregar').innerHTML = productoHtml;
+  
   document.getElementById('modal-venta-metodo').value = venta.id_metodo_pago || '1';
   document.getElementById('modal-venta-estado').value = venta.estatus || 'Pagada';
   document.getElementById('modal-venta-total').value = venta.total.toFixed(2);
   document.getElementById('modal-venta-fecha').value = venta.fecha_venta ? venta.fecha_venta.split('T')[0] : '';
   
-  // Mostrar detalles de productos
-  const detallesHtml = detalles.map(d => `
-    <div style="padding: 0.5rem 0; border-bottom: 1px solid #eee; font-size: 0.9rem;">
-      <strong>${d.productos?.nombre_producto || 'Producto'}</strong> - 
-      Cantidad: ${d.cantidad} × ${restaurante.formatearDinero(d.precio_unitario)} = ${restaurante.formatearDinero(d.subtotal)}
-    </div>
-  `).join('');
-  
-  const detallesDiv = document.getElementById('modal-venta-detalles');
-  if (!detallesDiv) {
-    const nuevaDiv = document.createElement('div');
-    nuevaDiv.id = 'modal-venta-detalles';
-    nuevaDiv.style.cssText = 'margin: 1rem 0; padding: 1rem; background: #f5f5f5; border-radius: 5px;';
-    document.getElementById('modal-editar-venta').querySelector('h2').after(nuevaDiv);
-  }
-  document.getElementById('modal-venta-detalles').innerHTML = `<strong>Productos:</strong>${detallesHtml || '<p style="color: #999;">Sin productos</p>'}`;
-  
+  window.mostrarDetallesVenta();
   document.getElementById('modal-editar-venta').style.display = 'flex';
 };
 
@@ -553,13 +599,59 @@ window.cerrarModalVenta = function() {
 
 window.guardarEditarVentaModal = async function() {
   if (!window.ventaEnEdicion) return;
+  if (window.detallesVentaEnEdicion.length === 0) { alert('❌ Agregar al menos un producto'); return; }
+  
   const id = window.ventaEnEdicion.id_venta;
   const idCliente = document.getElementById('modal-venta-cliente').value;
   const idMesa = document.getElementById('modal-venta-mesa').value;
   const estado = document.getElementById('modal-venta-estado').value;
-  const datos = { id_cliente: idCliente ? parseInt(idCliente) : null, id_mesa: idMesa ? parseInt(idMesa) : null, estatus: estado };
-  if (await restaurante.actualizarVenta(id, datos)) { alert('✅ Actualizado'); window.cerrarModalVenta(); window.cargarDatos(); }
-  else alert('❌ Error');
+  const total = parseFloat(document.getElementById('modal-venta-total').value);
+  
+  const subtotal = total / 1.16;
+  const iva = total - subtotal;
+  
+  const datos = { 
+    id_cliente: idCliente ? parseInt(idCliente) : null, 
+    id_mesa: idMesa ? parseInt(idMesa) : null, 
+    estatus: estado,
+    subtotal: subtotal,
+    iva: iva,
+    total: total
+  };
+  
+  try {
+    // Actualizar venta
+    if (!await restaurante.actualizarVenta(id, datos)) {
+      alert('❌ Error al actualizar venta');
+      return;
+    }
+    
+    // Eliminar detalles antiguos
+    await window.supabaseClient.from('detalle_ventas').delete().eq('id_venta', id);
+    
+    // Insertar nuevos detalles
+    const detalles = window.detallesVentaEnEdicion.map(d => ({
+      id_venta: id,
+      id_producto: d.id_producto,
+      cantidad: d.cantidad,
+      precio_unitario: d.precio_unitario,
+      subtotal: d.subtotal
+    }));
+    
+    const { error } = await window.supabaseClient.from('detalle_ventas').insert(detalles);
+    
+    if (error) {
+      alert('❌ Error al guardar productos');
+      return;
+    }
+    
+    alert('✅ Venta actualizada correctamente');
+    window.cerrarModalVenta();
+    window.cargarDatos();
+  } catch (e) {
+    console.error('Error guardar venta:', e);
+    alert('❌ Error al guardar');
+  }
 };
 
 window.eliminarVentaConfirm = async function(id) {

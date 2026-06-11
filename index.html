@@ -409,8 +409,8 @@
       <h1>🍽️ Restaurante</h1>
       <form class="login-form" onsubmit="window.hacerLogin(event)">
         <div class="form-group">
-          <label>Usuario:</label>
-          <input type="text" id="login-usuario" required autocomplete="off">
+          <label>Email:</label>
+          <input type="email" id="login-usuario" placeholder="tu@email.com" required autocomplete="off">
         </div>
         <div class="form-group">
           <label>Contraseña:</label>
@@ -572,6 +572,7 @@
                 <div><label>Rol:</label><select id="form-usuario-rol"><option value="vendedora">Vendedora</option><option value="admin">Admin</option></select></div>
               </div>
               <button type="button" class="btn btn-success" onclick="window.crearUsuario()">Crear Usuario</button>
+              <button type="button" class="btn btn-info" onclick="window.crearUsuariosDesdeEmpleados()" style="margin-left: 1rem;">👷 Crear desde Empleados</button>
             </div>
           </div>
 
@@ -708,7 +709,6 @@
     </div>
   </div>
 
-  <script>const db = window.db || {};</script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.38.1"></script>
   <script src="js/config.js"></script>
   <script src="js/app.js"></script>
@@ -717,64 +717,88 @@
     // ===== AUTENTICACIÓN =====
     window.hacerLogin = async function(event) {
       event.preventDefault();
-      const usuario = document.getElementById('login-usuario').value.trim();
+      const email = document.getElementById('login-usuario').value.trim();
       const password = document.getElementById('login-password').value;
 
-      if (!usuario || !password) {
+      if (!email || !password) {
         alert('❌ Completa todos los campos');
         return;
       }
 
       try {
-        const { data, error } = await window.supabaseClient
-          .from('usuarios')
-          .select('*')
-          .eq('nombre_usuario', usuario)
-          .single();
+        // Intentar loguear con Supabase Auth (requiere email)
+        const { data: authData, error: authError } = await window.supabaseClient.auth.signInWithPassword({
+          email: email,
+          password: password
+        });
 
-        if (error || !data) {
+        if (authError || !authData.user) {
           document.getElementById('login-error').textContent = '❌ Usuario o contraseña incorrectos';
           document.getElementById('login-error').style.display = 'block';
+          console.error('Auth error:', authError);
           return;
         }
 
-        // Verificar contraseña (simple comparación - en producción usar bcrypt)
-        if (data.password !== password) {
-          document.getElementById('login-error').textContent = '❌ Usuario o contraseña incorrectos';
+        // Obtener perfil del usuario autenticado
+        const { data: perfilData, error: perfilError } = await window.supabaseClient
+          .from('perfiles')
+          .select('*')
+          .eq('id', authData.user.id)
+          .single();
+
+        if (perfilError || !perfilData) {
+          document.getElementById('login-error').textContent = '❌ Perfil de usuario no encontrado';
           document.getElementById('login-error').style.display = 'block';
           return;
         }
 
         // Guardar sesión
-        localStorage.setItem('usuarioActual', JSON.stringify(data));
-        window.usuarioActual = data;
+        const usuarioCompleto = {
+          id: authData.user.id,
+          email: authData.user.email,
+          nombre_usuario: perfilData.nombre_usuario,
+          rol: perfilData.rol,
+          activo: perfilData.activo
+        };
+        
+        localStorage.setItem('usuarioActual', JSON.stringify(usuarioCompleto));
+        window.usuarioActual = usuarioCompleto;
 
         // Mostrar app
         document.getElementById('login-page').classList.add('hidden-section');
         document.getElementById('app-page').classList.remove('hidden-section');
         
         // Actualizar UI
-        document.getElementById('sidebar-nombre').textContent = data.nombre_usuario;
-        document.getElementById('sidebar-rol').textContent = data.rol.toUpperCase();
+        document.getElementById('sidebar-nombre').textContent = perfilData.nombre_usuario;
+        document.getElementById('sidebar-rol').textContent = perfilData.rol.toUpperCase();
 
         // Ocultar admin si es vendedor
-        if (data.rol === 'vendedora') {
+        if (perfilData.rol === 'vendedora') {
           document.querySelectorAll('.admin-only').forEach(el => el.style.display = 'none');
         }
+
+        // Limpiar error
+        document.getElementById('login-error').style.display = 'none';
 
         // Cargar datos
         window.cargarDatos();
 
       } catch (e) {
         console.error('Error login:', e);
-        alert('❌ Error al iniciar sesión');
+        document.getElementById('login-error').textContent = '❌ Error al iniciar sesión';
+        document.getElementById('login-error').style.display = 'block';
       }
-    }
+    };
 
-    window.hacerLogout = function() {
+    window.hacerLogout = async function() {
+      try {
+        await window.supabaseClient.auth.signOut();
+      } catch (e) {
+        console.error('Error logout:', e);
+      }
       localStorage.removeItem('usuarioActual');
       location.reload();
-    }
+    };
 
     window.mostrarPagina = function(page) {
       document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));

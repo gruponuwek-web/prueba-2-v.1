@@ -684,6 +684,7 @@
       <h2 style="margin-bottom: 1.5rem;">Editar Usuario</h2>
       <div class="form-row"><div><label>Usuario:</label><input type="text" id="modal-usuario-nombre"></div></div>
       <div class="form-row"><div><label>Email:</label><input type="email" id="modal-usuario-email"></div></div>
+      <div class="form-row"><div><label>Contraseña:</label><div style="display: flex; gap: 0.5rem; align-items: center;"><input type="password" id="modal-usuario-password" placeholder="Dejar vacío para no cambiar" style="flex: 1;"><button type="button" onclick="window.togglePasswordUsuario()" style="background: none; border: none; cursor: pointer; font-size: 1.2rem; color: #666; padding: 0.5rem; display: flex; align-items: center; justify-content: center;"><span id="toggle-password-icon">👁️</span></button></div><small style="color: #999; display: block; margin-top: 0.3rem;">Dejar vacío para mantener la contraseña actual</small></div></div>
       <div class="form-row"><div><label>Rol:</label><select id="modal-usuario-rol"><option value="vendedora">Vendedora</option><option value="admin">Admin</option></select></div></div>
       <div style="display: flex; gap: 1rem; justify-content: flex-end; margin-top: 1.5rem;">
         <button class="btn" style="background: #e74c3c;" onclick="window.cerrarModalUsuario()">Cancelar</button>

@@ -430,12 +430,22 @@ window.abrirEditarUsuario = async function(id) {
   document.getElementById('modal-usuario-nombre').value = usuario.nombre_usuario;
   document.getElementById('modal-usuario-email').value = usuario.email;
   document.getElementById('modal-usuario-rol').value = usuario.rol;
+  document.getElementById('modal-usuario-password').value = '';
+  document.getElementById('modal-usuario-password').type = 'password';
+  document.getElementById('toggle-password-icon').textContent = '👁️';
   document.getElementById('modal-editar-usuario').style.display = 'flex';
 };
 
-window.cerrarModalUsuario = function() {
-  document.getElementById('modal-editar-usuario').style.display = 'none';
-  window.usuarioEnEdicion = null;
+window.togglePasswordUsuario = function() {
+  const input = document.getElementById('modal-usuario-password');
+  const icon = document.getElementById('toggle-password-icon');
+  if (input.type === 'password') {
+    input.type = 'text';
+    icon.textContent = '🙈';
+  } else {
+    input.type = 'password';
+    icon.textContent = '👁️';
+  }
 };
 
 window.guardarEditarUsuarioModal = async function() {
@@ -443,8 +453,14 @@ window.guardarEditarUsuarioModal = async function() {
   const nombre = document.getElementById('modal-usuario-nombre').value.trim();
   const email = document.getElementById('modal-usuario-email').value.trim();
   const rol = document.getElementById('modal-usuario-rol').value;
+  const password = document.getElementById('modal-usuario-password').value.trim();
+  
   if (!nombre || !email) { alert('❌ Campos requeridos'); return; }
-  if (await restaurante.actualizarUsuario(window.usuarioEnEdicion.id_usuario, { nombre_usuario: nombre, email, rol })) {
+  
+  const datos = { nombre_usuario: nombre, email, rol };
+  if (password) datos.password = password;
+  
+  if (await restaurante.actualizarUsuario(window.usuarioEnEdicion.id_usuario, datos)) {
     alert('✅ Usuario actualizado');
     window.cerrarModalUsuario();
     window.cargarDatos();

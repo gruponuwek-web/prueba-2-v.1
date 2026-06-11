@@ -507,13 +507,32 @@ window.cargarDetallesVenta = async function(idVenta) {
 
 window.mostrarDetallesVenta = function() {
   const detallesHtml = window.detallesVentaEnEdicion.map((d, idx) => `
-    <div style="padding: 0.5rem; background: white; border-radius: 3px; margin-bottom: 0.3rem; display: flex; justify-content: space-between; align-items: center;">
-      <span><strong>${d.productos?.nombre_producto || 'Producto'}</strong> - Cant: ${d.cantidad} × ${restaurante.formatearDinero(d.precio_unitario)}</span>
-      <button class="btn btn-small btn-danger" onclick="window.eliminarProductoDeVenta(${idx})" style="padding: 0.3rem 0.6rem; font-size: 0.75rem;">X</button>
+    <div style="padding: 0.75rem; background: white; border: 1px solid #ddd; border-radius: 5px; margin-bottom: 0.5rem; display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+      <div style="flex: 1;">
+        <strong style="display: block; color: #333;">${d.productos?.nombre_producto || 'Producto'}</strong>
+        <small style="color: #666;">Precio: ${restaurante.formatearDinero(d.precio_unitario)}</small>
+      </div>
+      <div style="display: flex; align-items: center; gap: 0.5rem;">
+        <label style="font-size: 0.85rem; color: #666;">Cant:</label>
+        <input type="number" min="1" value="${d.cantidad}" onchange="window.editarCantidadProducto(${idx}, this.value)" style="width: 50px; padding: 0.3rem; border: 1px solid #ddd; border-radius: 3px; text-align: center;">
+      </div>
+      <div style="text-align: right; min-width: 80px;">
+        <div style="font-weight: bold; color: #0066cc;">${restaurante.formatearDinero(d.subtotal)}</div>
+        <small style="color: #999;">subtotal</small>
+      </div>
+      <button class="btn btn-small btn-danger" onclick="window.eliminarProductoDeVenta(${idx})" style="padding: 0.4rem 0.8rem; font-size: 0.85rem;">✕ Eliminar</button>
     </div>
   `).join('');
   
-  document.getElementById('modal-venta-detalles').innerHTML = detallesHtml || '<p style="color: #999; font-size: 0.9rem;">Sin productos</p>';
+  document.getElementById('modal-venta-detalles').innerHTML = detallesHtml || '<p style="color: #999; font-size: 0.9rem; padding: 1rem;">Sin productos</p>';
+};
+
+window.editarCantidadProducto = function(idx, cantidad) {
+  const cant = Math.max(1, parseInt(cantidad));
+  window.detallesVentaEnEdicion[idx].cantidad = cant;
+  window.detallesVentaEnEdicion[idx].subtotal = cant * window.detallesVentaEnEdicion[idx].precio_unitario;
+  window.mostrarDetallesVenta();
+  window.actualizarTotalVentaModal();
 };
 
 window.agregarProductoAVenta = async function() {
@@ -690,11 +709,13 @@ window.actualizarTablaCarrito = function() {
 
     const tr = document.createElement('tr');
     tr.innerHTML = `
-      <td>${item.nombre_producto}</td>
-      <td><input type="number" min="1" value="${item.cantidad}" onchange="window.cambiarCantidadCarrito(${idx}, this.value)" style="width: 60px;"></td>
-      <td>${restaurante.formatearDinero(item.precio)}</td>
-      <td>${restaurante.formatearDinero(itemSubtotal)}</td>
-      <td><button class="btn btn-small btn-danger" onclick="window.eliminarDelCarrito(${idx})">X</button></td>
+      <td><strong>${item.nombre_producto}</strong></td>
+      <td style="text-align: center;">
+        <input type="number" min="1" value="${item.cantidad}" onchange="window.cambiarCantidadCarrito(${idx}, this.value)" style="width: 60px; padding: 0.4rem; border: 1px solid #ddd; border-radius: 4px; text-align: center;">
+      </td>
+      <td style="text-align: right;">${restaurante.formatearDinero(item.precio)}</td>
+      <td style="text-align: right;"><strong>${restaurante.formatearDinero(itemSubtotal)}</strong></td>
+      <td style="text-align: center;"><button class="btn btn-small btn-danger" onclick="window.eliminarDelCarrito(${idx})" style="padding: 0.4rem 0.8rem; font-size: 0.85rem;">✕</button></td>
     `;
     tbody.appendChild(tr);
   });

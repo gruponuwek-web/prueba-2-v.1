@@ -4,80 +4,19 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Sistema de Gestión de Restaurante</title>
-  <link rel="stylesheet" href="css/styles.css">
   <style>
-    .modal {
-      display: none;
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(0,0,0,0.5);
-      z-index: 999;
-      align-items: center;
-      justify-content: center;
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
     }
-    .modal.active {
-      display: flex;
-    }
-    .modal-content {
-      background: white;
-      padding: 2rem;
-      border-radius: 10px;
-      width: 90%;
-      max-width: 500px;
-      box-shadow: 0 10px 40px rgba(0,0,0,0.3);
-    }
-    .modal-header {
-      font-size: 1.5rem;
-      font-weight: 700;
-      margin-bottom: 1.5rem;
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: #f5f5f5;
       color: #333;
     }
-    .modal-body {
-      display: grid;
-      gap: 1rem;
-      margin-bottom: 1.5rem;
-    }
-    .modal-footer {
-      display: flex;
-      gap: 1rem;
-      justify-content: flex-end;
-    }
-    .modal-footer button {
-      padding: 0.75rem 1.5rem;
-      border-radius: 5px;
-      border: none;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.2s;
-    }
-    .modal-btn-save {
-      background: #667eea;
-      color: white;
-    }
-    .modal-btn-save:hover {
-      background: #5568d3;
-    }
-    .modal-btn-cancel {
-      background: #ddd;
-      color: #333;
-    }
-    .modal-btn-cancel:hover {
-      background: #ccc;
-    }
-    .modal input, .modal select {
-      padding: 0.75rem;
-      border: 1px solid #ddd;
-      border-radius: 5px;
-      font-size: 1rem;
-    }
-    .modal-label {
-      font-weight: 600;
-      color: #333;
-      font-size: 0.9rem;
-    }
+
     .login-container {
       display: flex;
       align-items: center;
@@ -85,6 +24,7 @@
       min-height: 100vh;
       background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     }
+
     .login-box {
       background: white;
       padding: 3rem;
@@ -93,1270 +33,793 @@
       width: 100%;
       max-width: 400px;
     }
+
     .login-box h1 {
       text-align: center;
       margin-bottom: 2rem;
       color: #333;
     }
-    .login-box .form-group {
-      margin-bottom: 1.5rem;
+
+    .login-form {
+      display: grid;
+      gap: 1rem;
     }
-    .login-box label {
-      display: block;
-      margin-bottom: 0.5rem;
+
+    .form-group {
+      display: grid;
+      gap: 0.5rem;
+    }
+
+    .form-group label {
       font-weight: 600;
-      color: #333;
+      font-size: 0.9rem;
     }
-    .login-box input {
+
+    .form-group input {
+      padding: 0.75rem;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      font-size: 1rem;
+    }
+
+    .login-btn {
+      padding: 0.75rem;
+      background: #667eea;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      font-weight: 600;
+      cursor: pointer;
+      font-size: 1rem;
+    }
+
+    .login-btn:hover {
+      background: #5568d3;
+    }
+
+    .hidden-section {
+      display: none !important;
+    }
+
+    .app-container {
+      display: flex;
+      min-height: 100vh;
+    }
+
+    .sidebar {
+      width: 250px;
+      background: #2c3e50;
+      color: white;
+      padding: 1.5rem;
+      overflow-y: auto;
+    }
+
+    .sidebar-title {
+      font-size: 1.5rem;
+      font-weight: 700;
+      margin-bottom: 2rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .user-info {
+      background: rgba(255,255,255,0.1);
+      padding: 1rem;
+      border-radius: 5px;
+      margin-bottom: 2rem;
+      font-size: 0.9rem;
+    }
+
+    .user-name {
+      font-weight: 600;
+      margin-bottom: 0.3rem;
+    }
+
+    .user-role {
+      font-size: 0.8rem;
+      color: #bbb;
+      text-transform: uppercase;
+    }
+
+    .nav-menu {
+      list-style: none;
+      margin-bottom: 2rem;
+    }
+
+    .nav-menu li {
+      margin-bottom: 0.5rem;
+    }
+
+    .nav-menu a {
+      display: block;
+      padding: 0.75rem 1rem;
+      color: white;
+      text-decoration: none;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: all 0.2s;
+      border-left: 3px solid transparent;
+    }
+
+    .nav-menu a:hover, .nav-menu a.active {
+      background: rgba(255,255,255,0.1);
+      border-left-color: #667eea;
+    }
+
+    .nav-menu .admin-only {
+      color: #bbb;
+    }
+
+    .logout-btn {
+      width: 100%;
+      padding: 0.75rem;
+      background: #e74c3c;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-weight: 600;
+      margin-top: 2rem;
+    }
+
+    .logout-btn:hover {
+      background: #c0392b;
+    }
+
+    .main-content {
+      flex: 1;
+      padding: 2rem;
+      overflow-y: auto;
+    }
+
+    .page {
+      display: none;
+    }
+
+    .page.active {
+      display: block;
+    }
+
+    h2 {
+      font-size: 1.8rem;
+      margin-bottom: 1.5rem;
+      color: #2c3e50;
+    }
+
+    .card {
+      background: white;
+      border-radius: 10px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+      margin-bottom: 2rem;
+      overflow: hidden;
+    }
+
+    .card-header {
+      background: #2c3e50;
+      color: white;
+      padding: 1rem 1.5rem;
+      font-weight: 600;
+    }
+
+    .card-body {
+      padding: 1.5rem;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.95rem;
+    }
+
+    thead {
+      background: #34495e;
+      color: white;
+    }
+
+    th {
+      padding: 1rem;
+      text-align: left;
+      font-weight: 600;
+    }
+
+    td {
+      padding: 0.75rem 1rem;
+      border-bottom: 1px solid #eee;
+    }
+
+    tbody tr:hover {
+      background: #f9f9f9;
+    }
+
+    /* EDICIÓN INLINE */
+    .edit-mode td {
+      background: #fffde7 !important;
+    }
+
+    .cell-edit {
+      padding: 0 !important;
+    }
+
+    .cell-edit input, .cell-edit select {
+      width: 100%;
+      padding: 0.5rem;
+      border: 2px solid #667eea;
+      border-radius: 3px;
+      font-size: 0.9rem;
+      font-family: inherit;
+    }
+
+    .btn {
+      padding: 0.5rem 1rem;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.2s;
+      font-size: 0.85rem;
+    }
+
+    .btn-info {
+      background: #3498db;
+      color: white;
+    }
+
+    .btn-info:hover {
+      background: #2980b9;
+    }
+
+    .btn-danger {
+      background: #e74c3c;
+      color: white;
+    }
+
+    .btn-danger:hover {
+      background: #c0392b;
+    }
+
+    .btn-success {
+      background: #27ae60;
+      color: white;
+    }
+
+    .btn-success:hover {
+      background: #229954;
+    }
+
+    .btn-small {
+      padding: 0.4rem 0.8rem;
+      font-size: 0.8rem;
+      margin-right: 0.3rem;
+    }
+
+    .btn-save-inline {
+      background: #27ae60;
+      color: white;
+      padding: 0.4rem 0.8rem;
+      border: none;
+      border-radius: 3px;
+      cursor: pointer;
+      font-size: 0.8rem;
+      margin-right: 0.2rem;
+      font-weight: 600;
+    }
+
+    .btn-save-inline:hover {
+      background: #229954;
+    }
+
+    .btn-cancel-inline {
+      background: #e74c3c;
+      color: white;
+      padding: 0.4rem 0.8rem;
+      border: none;
+      border-radius: 3px;
+      cursor: pointer;
+      font-size: 0.8rem;
+      font-weight: 600;
+    }
+
+    .btn-cancel-inline:hover {
+      background: #c0392b;
+    }
+
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+      margin-bottom: 1rem;
+    }
+
+    .form-group-full {
+      grid-column: 1 / -1;
+    }
+
+    input, select, textarea {
       width: 100%;
       padding: 0.75rem;
       border: 1px solid #ddd;
       border-radius: 5px;
       font-size: 1rem;
-      box-sizing: border-box;
+      font-family: inherit;
     }
-    .login-box input:focus {
-      outline: none;
-      border-color: #667eea;
-      box-shadow: 0 0 5px rgba(102, 126, 234, 0.5);
+
+    textarea {
+      resize: vertical;
+      min-height: 80px;
     }
-    .login-box button {
-      width: 100%;
-      padding: 0.75rem;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      color: white;
-      border: none;
-      border-radius: 5px;
-      font-size: 1rem;
+
+    .badge {
+      display: inline-block;
+      padding: 0.3rem 0.8rem;
+      border-radius: 20px;
+      font-size: 0.8rem;
       font-weight: 600;
-      cursor: pointer;
-      transition: transform 0.2s;
     }
-    .login-box button:hover {
-      transform: translateY(-2px);
+
+    .badge-success {
+      background: #d4edda;
+      color: #155724;
     }
-    .login-error {
-      background: #fee;
-      color: #c33;
-      padding: 0.75rem;
-      border-radius: 5px;
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 1.5rem;
+      margin-bottom: 2rem;
+    }
+
+    .stat-card {
+      background: white;
+      padding: 1.5rem;
+      border-radius: 10px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+      border-left: 4px solid #667eea;
+    }
+
+    .stat-label {
+      font-size: 0.9rem;
+      color: #666;
+      margin-bottom: 0.5rem;
+    }
+
+    .stat-value {
+      font-size: 2rem;
+      font-weight: 700;
+      color: #2c3e50;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 3rem;
+      color: #999;
+    }
+
+    .empty-state-icon {
+      font-size: 3rem;
       margin-bottom: 1rem;
-      display: none;
-    }
-    .hidden-section {
-      display: none !important;
     }
   </style>
 </head>
 <body>
 
-<!-- LOGIN PAGE -->
-<div id="login-page" class="login-container">
-  <div class="login-box">
-    <h1>🍽️ Restaurante</h1>
-    <div class="login-error" id="login-error"></div>
-    <form id="form-login" onsubmit="hacerLogin(event)">
-      <div class="form-group">
-        <label for="login-usuario">Usuario</label>
-        <input type="text" id="login-usuario" name="usuario" required autofocus>
-      </div>
-      <div class="form-group">
-        <label for="login-password">Contraseña</label>
-        <input type="password" id="login-password" name="password" required>
-      </div>
-      <button type="submit">Iniciar Sesión</button>
-    </form>
-    <p style="text-align: center; margin-top: 1rem; color: #999; font-size: 0.9rem;">
-      Ingresa tu usuario y contraseña (Admin demo: admin/admin123)
-    </p>
+  <!-- LOGIN -->
+  <div id="login-page" class="login-container">
+    <div class="login-box">
+      <h1>🍽️ Restaurante</h1>
+      <form class="login-form" onsubmit="window.hacerLogin(event)">
+        <div class="form-group">
+          <label>Usuario:</label>
+          <input type="text" id="login-usuario" required autocomplete="off">
+        </div>
+        <div class="form-group">
+          <label>Contraseña:</label>
+          <input type="password" id="login-password" required autocomplete="off">
+        </div>
+        <button type="submit" class="login-btn">Ingresar</button>
+        <div id="login-error" style="color: #e74c3c; text-align: center; margin-top: 1rem; display: none;"></div>
+      </form>
+    </div>
   </div>
-</div>
 
-<!-- APP PAGE -->
-<div id="app-page" style="display: none;">
-  <div class="wrapper">
-    <!-- SIDEBAR -->
-    <aside class="sidebar">
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
-        <h2>🍽️ Restaurante</h2>
-        <button onclick="hacerLogout()" class="btn btn-small btn-danger" title="Cerrar sesión">🚪</button>
-      </div>
-      <div style="margin-bottom: 1rem; font-size: 0.9rem; color: #999;">
-        <strong id="usuario-nombre"></strong>
-        <div id="usuario-rol" style="font-size: 0.8rem;"></div>
-      </div>
-      <nav>
-        <ul>
-          <li><a href="#dashboard" class="nav-link active">📊 Dashboard</a></li>
-          <li><a href="#ventas" class="nav-link">💰 Ventas</a></li>
-          <li class="admin-only"><a href="#productos" class="nav-link">🍽️ Productos</a></li>
-          <li><a href="#mesas" class="nav-link">🪑 Mesas</a></li>
-          <li class="admin-only"><a href="#clientes" class="nav-link">👥 Clientes</a></li>
-          <li class="admin-only"><a href="#reportes" class="nav-link">📈 Reportes</a></li>
-          <li class="admin-only"><a href="#empleados" class="nav-link">👔 Empleados</a></li>
-          <li class="admin-only"><a href="#configuracion" class="nav-link">⚙️ Configuración</a></li>
+  <!-- APP -->
+  <div id="app-page" class="hidden-section">
+    <div class="app-container">
+      <!-- SIDEBAR -->
+      <div class="sidebar">
+        <div class="sidebar-title">🍽️ Restaurante</div>
+        <div class="user-info">
+          <div class="user-name" id="sidebar-nombre">Usuario</div>
+          <div class="user-role" id="sidebar-rol">admin</div>
+        </div>
+        <ul class="nav-menu">
+          <li><a class="nav-link active" data-page="dashboard" onclick="window.mostrarPagina('dashboard')">📊 Dashboard</a></li>
+          <li><a class="nav-link" data-page="ventas" onclick="window.mostrarPagina('ventas')">💰 Ventas</a></li>
+          <li class="admin-only"><a class="nav-link" data-page="productos" onclick="window.mostrarPagina('productos')">📦 Productos</a></li>
+          <li class="admin-only"><a class="nav-link" data-page="clientes" onclick="window.mostrarPagina('clientes')">👥 Clientes</a></li>
+          <li class="admin-only"><a class="nav-link" data-page="usuarios" onclick="window.mostrarPagina('usuarios')">👤 Usuarios</a></li>
+          <li class="admin-only"><a class="nav-link" data-page="mesas" onclick="window.mostrarPagina('mesas')">🍽️ Mesas</a></li>
         </ul>
-      </nav>
-    </aside>
+        <button class="logout-btn" onclick="window.hacerLogout()">Cerrar Sesión</button>
+      </div>
 
-    <!-- MAIN CONTENT -->
-    <main class="main-content">
-      <header>
-        <h1>🍽️ Sistema de Gestión de Restaurante</h1>
-        <p>Manage your restaurant with ease | Gestiona tu restaurante con facilidad</p>
-        <div style="margin-top: 1rem; font-size: 12px;">
-          <span id="connection-status">⏳ Conectando...</span>
-        </div>
-      </header>
+      <!-- CONTENIDO -->
+      <div class="main-content">
 
-      <!-- DASHBOARD -->
-      <section id="dashboard" class="page-section">
-        <h2 style="margin-bottom: 1.5rem;">📊 Dashboard</h2>
-        
-        <div class="grid grid-cols-4">
-          <div class="stat-card">
-            <div class="stat-value" id="stat-ventas-hoy">0</div>
-            <div class="stat-label">Ventas Hoy</div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-value" id="stat-total-hoy">$0</div>
-            <div class="stat-label">Total Hoy</div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-value" id="stat-promedio">$0</div>
-            <div class="stat-label">Promedio por Venta</div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-value" id="stat-mesas">0/0</div>
-            <div class="stat-label">Mesas Ocupadas</div>
-          </div>
-        </div>
-
-        <div class="grid grid-cols-2" style="margin-top: 2rem;">
+        <!-- DASHBOARD -->
+        <div id="page-dashboard" class="page active">
+          <h2>📊 Dashboard</h2>
+          <div class="stats-grid" id="stats-grid"></div>
           <div class="card">
-            <div class="card-header">📋 Últimas Ventas</div>
+            <div class="card-header">📈 Últimas Ventas</div>
             <div class="card-body">
               <table id="tabla-ultimas-ventas">
                 <thead>
-                  <tr>
-                    <th>Fecha</th>
-                    <th>Cliente</th>
-                    <th>Total</th>
-                    <th>Estado</th>
-                  </tr>
+                  <tr><th>ID</th><th>Fecha</th><th>Cliente</th><th>Total</th><th>Estado</th></tr>
                 </thead>
-                <tbody>
-                  <tr>
-                    <td colspan="4" style="text-align: center; color: #999;">Cargando...</td>
-                  </tr>
-                </tbody>
+                <tbody></tbody>
               </table>
             </div>
           </div>
+        </div>
 
-          <div class="card admin-only">
-            <div class="card-header">🌟 Productos Más Vendidos</div>
+        <!-- VENTAS -->
+        <div id="page-ventas" class="page">
+          <h2>💰 Ventas</h2>
+          <div class="card">
+            <div class="card-header">Nueva Venta</div>
             <div class="card-body">
-              <table id="tabla-top-productos">
-                <thead>
-                  <tr>
-                    <th>Producto</th>
-                    <th>Cantidad</th>
-                    <th>Ingresos</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr>
-                    <td colspan="3" style="text-align: center; color: #999;">Cargando...</td>
-                  </tr>
-                </tbody>
+              <div class="form-row">
+                <div><label>Cliente:</label><select id="venta-cliente"></select></div>
+                <div><label>Mesa:</label><select id="venta-mesa"></select></div>
+              </div>
+              <div class="form-row">
+                <div><label>Producto:</label><select id="venta-producto"></select></div>
+                <div><button type="button" class="btn btn-info" onclick="window.agregarProductoAlCarrito()">Agregar</button></div>
+              </div>
+              <table id="tabla-carrito">
+                <thead><tr><th>Producto</th><th>Cantidad</th><th>Precio</th><th>Subtotal</th><th></th></tr></thead>
+                <tbody></tbody>
+              </table>
+              <div style="margin-top: 1rem; text-align: right;">
+                <div style="margin-bottom: 0.5rem;">Subtotal: <strong id="venta-subtotal">$0.00</strong></div>
+                <div style="margin-bottom: 0.5rem;">IVA (16%): <strong id="venta-iva">$0.00</strong></div>
+                <div style="font-size: 1.2rem; margin-bottom: 1rem;">Total: <strong id="venta-total" style="color: #e74c3c;">$0.00</strong></div>
+                <button type="button" class="btn btn-success" onclick="window.registrarVenta()" style="padding: 0.75rem 2rem;">Registrar Venta</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">Historial de Ventas</div>
+            <div class="card-body">
+              <table id="tabla-ventas">
+                <thead><tr><th>ID</th><th>Fecha</th><th>Cliente</th><th>Total</th><th>Estado</th><th>Acciones</th></tr></thead>
+                <tbody></tbody>
               </table>
             </div>
           </div>
         </div>
-      </section>
 
-      <!-- VENTAS -->
-      <section id="ventas" class="page-section hidden">
-        <h2 style="margin-bottom: 1.5rem;">💰 Gestión de Ventas</h2>
-        
-        <div class="card">
-          <div class="card-header">Crear Nueva Venta</div>
-          <div class="card-body">
-            <form id="form-venta" style="display: grid; gap: 1rem;">
-              <div class="grid grid-cols-2">
-                <div class="form-group">
-                  <label for="venta-cliente">Cliente</label>
-                  <select id="venta-cliente" name="cliente">
-                    <option value="">-- Seleccionar Cliente --</option>
-                  </select>
-                </div>
-                <div class="form-group">
-                  <label for="venta-mesa">Mesa</label>
-                  <select id="venta-mesa" name="mesa">
-                    <option value="">-- Seleccionar Mesa --</option>
-                  </select>
-                </div>
-                <div class="form-group">
-                  <label for="venta-empleado">Empleado</label>
-                  <select id="venta-empleado" name="empleado">
-                    <option value="">-- Seleccionar Empleado --</option>
-                  </select>
-                </div>
-                <div class="form-group">
-                  <label for="venta-metodo">Método de Pago</label>
-                  <select id="venta-metodo" name="metodo">
-                    <option value="">-- Seleccionar Método --</option>
-                    <option value="1">Efectivo</option>
-                    <option value="2">Tarjeta de Crédito</option>
-                    <option value="3">Tarjeta de Débito</option>
-                    <option value="4">Transferencia</option>
-                  </select>
-                </div>
+        <!-- PRODUCTOS -->
+        <div id="page-productos" class="page admin-only">
+          <h2>📦 Productos</h2>
+          <div class="card">
+            <div class="card-header">Nuevo Producto</div>
+            <div class="card-body">
+              <div class="form-row">
+                <div><label>Nombre:</label><input type="text" id="form-producto-nombre"></div>
+                <div><label>Precio:</label><input type="number" id="form-producto-precio" step="0.01"></div>
               </div>
-
-              <div style="border: 1px solid #ddd; padding: 1rem; border-radius: 5px; background: #f9f9f9;">
-                <label style="font-weight: 600; margin-bottom: 0.5rem; display: block;">➕ Agregar Productos</label>
-                <div style="display: flex; gap: 1rem; margin-bottom: 1rem;">
-                  <select id="venta-selector-producto" style="flex: 1; padding: 0.75rem; border: 1px solid #ddd; border-radius: 5px;">
-                    <option value="">-- Seleccionar Producto --</option>
-                  </select>
-                  <button type="button" class="btn btn-primary" onclick="agregarProductoAlCarrito()">Agregar</button>
-                </div>
+              <div class="form-row form-group-full">
+                <div><label>Descripción:</label><textarea id="form-producto-desc"></textarea></div>
               </div>
-
-              <div class="form-group">
-                <label>Productos en el Carrito</label>
-                <table id="tabla-carrito" style="width: 100%; border: 1px solid #ddd; border-collapse: collapse;">
-                  <thead>
-                    <tr style="background: #f0f0f0;">
-                      <th style="padding: 10px; text-align: left; border: 1px solid #ddd;">Producto</th>
-                      <th style="padding: 10px; text-align: center; border: 1px solid #ddd;">Cantidad</th>
-                      <th style="padding: 10px; text-align: right; border: 1px solid #ddd;">Precio</th>
-                      <th style="padding: 10px; text-align: right; border: 1px solid #ddd;">Subtotal</th>
-                      <th style="padding: 10px; text-align: center; border: 1px solid #ddd;">Acción</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr>
-                      <td colspan="5" style="text-align: center; padding: 1rem; color: #999;">
-                        Carrito vacío
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-
-              <div style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 1rem; margin-top: 1rem;">
-                <div style="text-align: right; font-weight: bold;">
-                  Subtotal: <span id="venta-subtotal">$0.00</span>
-                </div>
-                <div style="text-align: right; font-weight: bold;">
-                  IVA (16%): <span id="venta-iva">$0.00</span>
-                </div>
-                <div style="text-align: right; font-weight: bold; color: var(--color-secondary); font-size: 1.2rem;">
-                  Total: <span id="venta-total">$0.00</span>
-                </div>
-                <button type="submit" class="btn btn-success">💾 Registrar Venta</button>
-              </div>
-            </form>
-          </div>
-        </div>
-
-        <div class="card" style="margin-top: 2rem;">
-          <div class="card-header">Historial de Ventas</div>
-          <div class="card-body">
-            <table id="tabla-ventas" style="width: 100%; font-size: 0.85rem;">
-              <thead>
-                <tr>
-                  <th>ID Venta</th>
-                  <th>Fecha</th>
-                  <th>Cliente</th>
-                  <th>Mesa</th>
-                  <th>Total</th>
-                  <th>Método de Pago</th>
-                  <th>Estado</th>
-                  <th style="text-align: center;">Acciones</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td colspan="8" style="text-align: center; padding: 2rem; color: #999;">Cargando ventas...</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </section>
-
-      <!-- PRODUCTOS -->
-      <section id="productos" class="page-section hidden">
-        <h2 style="margin-bottom: 1.5rem;">🍽️ Gestión de Productos</h2>
-        
-        <div class="card">
-          <div class="card-header">Agregar Nuevo Producto</div>
-          <div class="card-body">
-            <form id="form-producto" style="display: grid; gap: 1rem;">
-              <div class="grid grid-cols-2">
-                <div class="form-group">
-                  <label for="prod-nombre">Nombre del Producto</label>
-                  <input type="text" id="prod-nombre" name="nombre" required>
-                </div>
-                <div class="form-group">
-                  <label for="prod-categoria">Categoría</label>
-                  <select id="prod-categoria" name="categoria" required>
-                    <option value="">-- Seleccionar Categoría --</option>
-                  </select>
-                </div>
-                <div class="form-group">
-                  <label for="prod-precio">Precio (MXN)</label>
-                  <input type="number" id="prod-precio" name="precio" step="0.01" min="0" required>
-                </div>
-                <div class="form-group">
-                  <label for="prod-descripcion">Descripción</label>
-                  <textarea id="prod-descripcion" name="descripcion" rows="1"></textarea>
-                </div>
-              </div>
-              <button type="submit" class="btn btn-primary">Agregar Producto</button>
-            </form>
-          </div>
-        </div>
-
-        <div class="card" style="margin-top: 2rem;">
-          <div class="card-header">Catálogo de Productos</div>
-          <div class="card-body">
-            <table id="tabla-productos">
-              <thead>
-                <tr>
-                  <th>Nombre</th>
-                  <th>Categoría</th>
-                  <th>Precio</th>
-                  <th>Descripción</th>
-                  <th>Estado</th>
-                  <th>Acciones</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td colspan="6" style="text-align: center; padding: 2rem; color: #999;">Cargando productos...</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </section>
-
-      <!-- MESAS -->
-      <section id="mesas" class="page-section hidden">
-        <h2 style="margin-bottom: 1.5rem;">🪑 Gestión de Mesas</h2>
-        
-        <div class="grid grid-cols-4" id="grid-mesas">
-          <p style="grid-column: 1/-1; text-align: center; color: #999;">Cargando mesas...</p>
-        </div>
-      </section>
-
-      <!-- CLIENTES -->
-      <section id="clientes" class="page-section hidden">
-        <h2 style="margin-bottom: 1.5rem;">👥 Gestión de Clientes</h2>
-        
-        <div class="card">
-          <div class="card-header">Agregar Nuevo Cliente</div>
-          <div class="card-body">
-            <form id="form-cliente" style="display: grid; gap: 1rem;">
-              <div class="grid grid-cols-2">
-                <div class="form-group">
-                  <label for="cli-nombre">Nombre</label>
-                  <input type="text" id="cli-nombre" name="nombre" required>
-                </div>
-                <div class="form-group">
-                  <label for="cli-telefono">Teléfono</label>
-                  <input type="tel" id="cli-telefono" name="telefono">
-                </div>
-                <div class="form-group" style="grid-column: 1/-1;">
-                  <label for="cli-email">Email</label>
-                  <input type="email" id="cli-email" name="email">
-                </div>
-              </div>
-              <button type="submit" class="btn btn-primary">Agregar Cliente</button>
-            </form>
-          </div>
-        </div>
-
-        <div class="card" style="margin-top: 2rem;">
-          <div class="card-header">Lista de Clientes</div>
-          <div class="card-body">
-            <table id="tabla-clientes">
-              <thead>
-                <tr>
-                  <th>Nombre</th>
-                  <th>Teléfono</th>
-                  <th>Email</th>
-                  <th>Fecha Registro</th>
-                  <th>Acciones</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td colspan="5" style="text-align: center; padding: 2rem; color: #999;">Cargando clientes...</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </section>
-
-      <!-- REPORTES -->
-      <section id="reportes" class="page-section hidden">
-        <h2 style="margin-bottom: 1.5rem;">📈 Reportes</h2>
-        
-        <div class="card">
-          <div class="card-header">Reporte Diario</div>
-          <div class="card-body">
-            <div class="form-group" style="max-width: 300px;">
-              <label for="reporte-fecha">Selecciona una fecha</label>
-              <input type="date" id="reporte-fecha" style="width: 100%;">
+              <button type="button" class="btn btn-success" onclick="window.crearProducto()">Crear Producto</button>
             </div>
-            <button class="btn btn-primary" onclick="cargarReporteDiario()">Generar Reporte</button>
+          </div>
+
+          <div class="card">
+            <div class="card-header">Lista de Productos</div>
+            <div class="card-body">
+              <table id="tabla-productos">
+                <thead><tr><th>Nombre</th><th>Precio</th><th>Descripción</th><th>Estado</th><th>Acciones</th></tr></thead>
+                <tbody></tbody>
+              </table>
+            </div>
           </div>
         </div>
 
-        <div class="card" style="margin-top: 2rem;">
-          <div class="card-header">Resultados del Reporte</div>
-          <div class="card-body" id="resultado-reporte">
-            <p style="text-align: center; color: #999;">Selecciona una fecha y genera el reporte</p>
-          </div>
-        </div>
-      </section>
-
-      <!-- EMPLEADOS -->
-      <section id="empleados" class="page-section hidden">
-        <h2 style="margin-bottom: 1.5rem;">👔 Gestión de Empleados</h2>
-        
-        <div class="card">
-          <div class="card-header">Lista de Empleados</div>
-          <div class="card-body">
-            <table id="tabla-empleados">
-              <thead>
-                <tr>
-                  <th>Nombre</th>
-                  <th>Puesto</th>
-                  <th>Teléfono</th>
-                  <th>Estado</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td colspan="4" style="text-align: center; padding: 2rem; color: #999;">Cargando empleados...</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </section>
-
-      <!-- CONFIGURACIÓN -->
-      <section id="configuracion" class="page-section hidden">
-        <h2 style="margin-bottom: 1.5rem;">⚙️ Configuración</h2>
-        
-        <div class="card">
-          <div class="card-header">Estado de Conexión</div>
-          <div class="card-body">
-            <p><strong>Base de datos:</strong> <span id="config-db-status">Verificando...</span></p>
-            <p><strong>URL Supabase:</strong> vuxuwgwhbseyhhiypcrg.supabase.co</p>
-            <button class="btn btn-info" onclick="testConnection()">Probar Conexión</button>
-          </div>
-        </div>
-
-        <div class="card" style="margin-top: 2rem;">
-          <div class="card-header">👤 Gestión de Usuarios</div>
-          <div class="card-body">
-            <form id="form-usuario" style="display: grid; gap: 1rem;">
-              <div class="grid grid-cols-2">
-                <div class="form-group">
-                  <label for="usr-nombre">Nombre de Usuario</label>
-                  <input type="text" id="usr-nombre" name="nombre_usuario" required>
-                </div>
-                <div class="form-group">
-                  <label for="usr-email">Email</label>
-                  <input type="email" id="usr-email" name="email" required>
-                </div>
-                <div class="form-group">
-                  <label for="usr-password">Contraseña</label>
-                  <input type="password" id="usr-password" name="password" required>
-                </div>
-                <div class="form-group">
-                  <label for="usr-rol">Rol</label>
-                  <select id="usr-rol" name="rol" required>
-                    <option value="">-- Seleccionar Rol --</option>
-                    <option value="admin">Admin</option>
-                    <option value="vendedora">Vendedor</option>
-                  </select>
-                </div>
+        <!-- CLIENTES -->
+        <div id="page-clientes" class="page admin-only">
+          <h2>👥 Clientes</h2>
+          <div class="card">
+            <div class="card-header">Nuevo Cliente</div>
+            <div class="card-body">
+              <div class="form-row">
+                <div><label>Nombre:</label><input type="text" id="form-cliente-nombre"></div>
+                <div><label>Teléfono:</label><input type="tel" id="form-cliente-telefono"></div>
               </div>
-              <button type="submit" class="btn btn-primary">Crear Usuario</button>
-            </form>
+              <div class="form-row">
+                <div><label>Email:</label><input type="email" id="form-cliente-email"></div>
+              </div>
+              <button type="button" class="btn btn-success" onclick="window.crearCliente()">Crear Cliente</button>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">Lista de Clientes</div>
+            <div class="card-body">
+              <table id="tabla-clientes">
+                <thead><tr><th>Nombre</th><th>Teléfono</th><th>Email</th><th>Acciones</th></tr></thead>
+                <tbody></tbody>
+              </table>
+            </div>
           </div>
         </div>
 
-        <div class="card" style="margin-top: 2rem;">
-          <div class="card-header">📋 Lista de Usuarios</div>
-          <div class="card-body">
-            <table id="tabla-usuarios">
-              <thead>
-                <tr>
-                  <th>Nombre</th>
-                  <th>Email</th>
-                  <th>Rol</th>
-                  <th>Estado</th>
-                  <th>Fecha Creación</th>
-                  <th>Acciones</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td colspan="6" style="text-align: center; padding: 2rem; color: #999;">Cargando usuarios...</td>
-                </tr>
-              </tbody>
-            </table>
+        <!-- USUARIOS -->
+        <div id="page-usuarios" class="page admin-only">
+          <h2>👤 Usuarios</h2>
+          <div class="card">
+            <div class="card-header">Nuevo Usuario</div>
+            <div class="card-body">
+              <div class="form-row">
+                <div><label>Usuario:</label><input type="text" id="form-usuario-nombre"></div>
+                <div><label>Email:</label><input type="email" id="form-usuario-email"></div>
+              </div>
+              <div class="form-row">
+                <div><label>Contraseña:</label><input type="password" id="form-usuario-password"></div>
+                <div><label>Rol:</label><select id="form-usuario-rol"><option value="vendedora">Vendedora</option><option value="admin">Admin</option></select></div>
+              </div>
+              <button type="button" class="btn btn-success" onclick="window.crearUsuario()">Crear Usuario</button>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">Lista de Usuarios</div>
+            <div class="card-body">
+              <table id="tabla-usuarios">
+                <thead><tr><th>Usuario</th><th>Email</th><th>Rol</th><th>Acciones</th></tr></thead>
+                <tbody></tbody>
+              </table>
+            </div>
           </div>
         </div>
-      </section>
-    </main>
-  </div>
-</div>
 
-<!-- MODALES DE EDICIÓN -->
+        <!-- MESAS -->
+        <div id="page-mesas" class="page admin-only">
+          <h2>🍽️ Mesas</h2>
+          <div class="card">
+            <div class="card-header">Lista de Mesas</div>
+            <div class="card-body">
+              <table id="tabla-mesas">
+                <thead><tr><th>Número</th><th>Capacidad</th><th>Ubicación</th><th>Estado</th></tr></thead>
+                <tbody></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
 
-<!-- Modal Editar Cliente -->
-<div id="modal-editar-cliente" class="modal">
-  <div class="modal-content">
-    <div class="modal-header">✏️ Editar Cliente</div>
-    <div class="modal-body">
-      <div>
-        <label class="modal-label">Nombre</label>
-        <input type="text" id="modal-cliente-nombre" placeholder="Nombre completo">
       </div>
-      <div>
-        <label class="modal-label">Teléfono</label>
-        <input type="tel" id="modal-cliente-telefono" placeholder="7712345678">
-      </div>
-      <div>
-        <label class="modal-label">Email</label>
-        <input type="email" id="modal-cliente-email" placeholder="cliente@email.com">
-      </div>
-    </div>
-    <div class="modal-footer">
-      <button class="modal-btn-cancel" onclick="cerrarModal('modal-editar-cliente')">Cancelar</button>
-      <button class="modal-btn-save" onclick="guardarEditarCliente()">Guardar Cambios</button>
     </div>
   </div>
-</div>
 
-<!-- Modal Editar Producto -->
-<div id="modal-editar-producto" class="modal">
-  <div class="modal-content">
-    <div class="modal-header">✏️ Editar Producto</div>
-    <div class="modal-body">
-      <div>
-        <label class="modal-label">Nombre del Producto</label>
-        <input type="text" id="modal-producto-nombre" placeholder="Nombre">
+  <!-- MODAL EDITAR VENTA -->
+  <div id="modal-editar-venta" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center;">
+    <div style="background: white; padding: 2rem; border-radius: 10px; width: 90%; max-width: 600px; max-height: 80vh; overflow-y: auto;">
+      <h2 style="margin-bottom: 1.5rem;">Editar Venta</h2>
+      
+      <div class="form-row">
+        <div><label>Cliente:</label><select id="modal-venta-cliente"></select></div>
+        <div><label>Mesa:</label><select id="modal-venta-mesa"></select></div>
       </div>
-      <div>
-        <label class="modal-label">Categoría</label>
-        <select id="modal-producto-categoria"></select>
-      </div>
-      <div>
-        <label class="modal-label">Precio (MXN)</label>
-        <input type="number" id="modal-producto-precio" placeholder="100.00" step="0.01">
-      </div>
-      <div>
-        <label class="modal-label">Descripción</label>
-        <input type="text" id="modal-producto-descripcion" placeholder="Descripción breve">
-      </div>
-    </div>
-    <div class="modal-footer">
-      <button class="modal-btn-cancel" onclick="cerrarModal('modal-editar-producto')">Cancelar</button>
-      <button class="modal-btn-save" onclick="guardarEditarProducto()">Guardar Cambios</button>
-    </div>
-  </div>
-</div>
 
-<!-- Modal Editar Usuario -->
-<div id="modal-editar-usuario" class="modal">
-  <div class="modal-content">
-    <div class="modal-header">✏️ Editar Usuario</div>
-    <div class="modal-body">
-      <div>
-        <label class="modal-label">Nombre de Usuario</label>
-        <input type="text" id="modal-usuario-nombre" placeholder="usuario">
+      <div class="form-row">
+        <div><label>Método de Pago:</label><select id="modal-venta-metodo"><option value="1">Efectivo</option><option value="2">Tarjeta débito</option><option value="3">Tarjeta crédito</option></select></div>
+        <div><label>Canal Venta:</label><input type="text" id="modal-venta-canal" placeholder="Online, Mostrador, etc."></div>
       </div>
-      <div>
-        <label class="modal-label">Email</label>
-        <input type="email" id="modal-usuario-email" placeholder="usuario@email.com">
+
+      <div class="form-row">
+        <div><label>Estado Venta:</label><select id="modal-venta-estado"><option value="Pagada">Pagada</option><option value="Pendiente">Pendiente</option><option value="Cancelada">Cancelada</option></select></div>
+        <div><label>Total Venta:</label><input type="number" id="modal-venta-total" step="0.01" disabled style="background: #f5f5f5;"></div>
       </div>
-      <div>
-        <label class="modal-label">Rol</label>
-        <select id="modal-usuario-rol">
-          <option value="admin">Admin</option>
-          <option value="vendedora">Vendedor</option>
-        </select>
+
+      <div class="form-row form-group-full">
+        <div><label>Observaciones:</label><textarea id="modal-venta-obs" style="min-height: 80px;"></textarea></div>
       </div>
-      <div>
-        <label class="modal-label">Estado</label>
-        <select id="modal-usuario-activo">
-          <option value="true">Activo</option>
-          <option value="false">Inactivo</option>
-        </select>
+
+      <div class="form-row">
+        <div><label>Fecha Creación:</label><input type="date" id="modal-venta-fecha"></div>
       </div>
-    </div>
-    <div class="modal-footer">
-      <button class="modal-btn-cancel" onclick="cerrarModal('modal-editar-usuario')">Cancelar</button>
-      <button class="modal-btn-save" onclick="guardarEditarUsuario()">Guardar Cambios</button>
+
+      <div style="display: flex; gap: 1rem; justify-content: flex-end; margin-top: 1.5rem;">
+        <button class="btn" style="background: #e74c3c;" onclick="window.cerrarModalVenta()">Cancelar</button>
+        <button class="btn btn-success" onclick="window.guardarEditarVentaModal()">Guardar Cambios</button>
+      </div>
     </div>
   </div>
-</div>
 
-<script>const db = window.db || {};</script>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.38.1"></script>
-<script src="js/config.js"></script>
-<script src="js/app.js"></script>
-<script>
-  // ===== AUTENTICACIÓN (desde Supabase) =====
-  
-  let usuarioActual = null;
+  <script>const db = window.db || {};</script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.38.1"></script>
+  <script src="js/config.js"></script>
+  <script src="js/app.js"></script>
 
-  async function hacerLogin(event) {
-    event.preventDefault();
-    const usuario = document.getElementById('login-usuario').value.trim();
-    const password = document.getElementById('login-password').value;
-    
-    if (!usuario || !password) {
-      const error = document.getElementById('login-error');
-      error.textContent = '❌ Completa usuario y contraseña';
-      error.style.display = 'block';
-      return;
-    }
+  <script>
+    // ===== AUTENTICACIÓN =====
+    window.hacerLogin = async function(event) {
+      event.preventDefault();
+      const usuario = document.getElementById('login-usuario').value.trim();
+      const password = document.getElementById('login-password').value;
 
-    try {
-      // Buscar usuario en Supabase
-      const { data, error } = await window.supabaseClient
-        .from('usuarios')
-        .select('*')
-        .eq('nombre_usuario', usuario)
-        .eq('activo', true);
-
-      if (error || !data || data.length === 0) {
-        const errorDiv = document.getElementById('login-error');
-        errorDiv.textContent = '❌ Usuario no encontrado o inactivo';
-        errorDiv.style.display = 'block';
+      if (!usuario || !password) {
+        alert('❌ Completa todos los campos');
         return;
       }
 
-      const usuarioDb = data[0];
+      try {
+        const { data, error } = await window.supabaseClient
+          .from('usuarios')
+          .select('*')
+          .eq('nombre_usuario', usuario)
+          .single();
 
-      // Validar contraseña (comparación simple - en producción usar bcrypt)
-      if (usuarioDb.password !== password) {
-        const errorDiv = document.getElementById('login-error');
-        errorDiv.textContent = '❌ Contraseña incorrecta';
-        errorDiv.style.display = 'block';
-        return;
+        if (error || !data) {
+          document.getElementById('login-error').textContent = '❌ Usuario o contraseña incorrectos';
+          document.getElementById('login-error').style.display = 'block';
+          return;
+        }
+
+        // Verificar contraseña (simple comparación - en producción usar bcrypt)
+        if (data.password !== password) {
+          document.getElementById('login-error').textContent = '❌ Usuario o contraseña incorrectos';
+          document.getElementById('login-error').style.display = 'block';
+          return;
+        }
+
+        // Guardar sesión
+        localStorage.setItem('usuarioActual', JSON.stringify(data));
+        window.usuarioActual = data;
+
+        // Mostrar app
+        document.getElementById('login-page').classList.add('hidden-section');
+        document.getElementById('app-page').classList.remove('hidden-section');
+        
+        // Actualizar UI
+        document.getElementById('sidebar-nombre').textContent = data.nombre_usuario;
+        document.getElementById('sidebar-rol').textContent = data.rol.toUpperCase();
+
+        // Ocultar admin si es vendedor
+        if (data.rol === 'vendedora') {
+          document.querySelectorAll('.admin-only').forEach(el => el.style.display = 'none');
+        }
+
+        // Cargar datos
+        window.cargarDatos();
+
+      } catch (e) {
+        console.error('Error login:', e);
+        alert('❌ Error al iniciar sesión');
       }
-
-      // Login exitoso
-      usuarioActual = {
-        id_usuario: usuarioDb.id_usuario,
-        nombre_usuario: usuarioDb.nombre_usuario,
-        email: usuarioDb.email,
-        rol: usuarioDb.rol,
-        nombre: usuarioDb.nombre_usuario
-      };
-
-      localStorage.setItem('usuarioActual', JSON.stringify(usuarioActual));
-      document.getElementById('login-error').style.display = 'none';
-      mostrarApp();
-    } catch (err) {
-      console.error('Error:', err);
-      const errorDiv = document.getElementById('login-error');
-      errorDiv.textContent = '❌ Error al conectar. Intenta de nuevo.';
-      errorDiv.style.display = 'block';
     }
-  }
 
-  function hacerLogout() {
-    if (confirm('¿Cerrar sesión?')) {
-      usuarioActual = null;
+    window.hacerLogout = function() {
       localStorage.removeItem('usuarioActual');
-      document.getElementById('login-page').style.display = 'flex';
-      document.getElementById('app-page').style.display = 'none';
-      document.getElementById('login-usuario').value = '';
-      document.getElementById('login-password').value = '';
-      document.getElementById('login-error').style.display = 'none';
+      location.reload();
     }
-  }
 
-  function mostrarApp() {
-    document.getElementById('login-page').style.display = 'none';
-    document.getElementById('app-page').style.display = 'block';
-    
-    document.getElementById('usuario-nombre').textContent = usuarioActual.nombre;
-    document.getElementById('usuario-rol').textContent = `[${usuarioActual.rol.toUpperCase()}]`;
-    
-    // Mostrar/ocultar secciones según rol
-    if (usuarioActual.rol === 'vendedora') {
-      document.querySelectorAll('.admin-only').forEach(el => {
-        el.classList.add('hidden-section');
-      });
-    }
-    
-    cargarDatos();
-  }
-
-  function verificarSesion() {
-    const sesion = localStorage.getItem('usuarioActual');
-    if (sesion) {
-      usuarioActual = JSON.parse(sesion);
-      mostrarApp();
-    }
-  }
-
-  // Navegación
-  document.querySelectorAll('.nav-link').forEach(link => {
-    link.addEventListener('click', function(e) {
-      e.preventDefault();
-      const sectionId = this.getAttribute('href').substring(1);
-      
-      document.querySelectorAll('.page-section').forEach(s => s.classList.add('hidden'));
-      document.getElementById(sectionId).classList.remove('hidden');
-      
+    window.mostrarPagina = function(page) {
+      document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+      document.getElementById(`page-${page}`).classList.add('active');
       document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
-      this.classList.add('active');
+      document.querySelector(`[data-page="${page}"]`).classList.add('active');
+    }
 
-      if (sectionId === 'configuracion') {
-        setTimeout(() => window.cargarUsuarios(), 100);
-      }
-    });
-  });
-
-  window.addEventListener('DOMContentLoaded', verificarSesion);
-
-  async function cargarDatos() {
-    // Cargar clientes
-    const clientes = await restaurante.cargarClientes();
-    const selectClientes = document.getElementById('venta-cliente');
-    selectClientes.innerHTML = '<option value="">-- Seleccionar Cliente --</option>';
-    clientes.forEach(c => {
-      const option = document.createElement('option');
-      option.value = c.id_cliente;
-      option.textContent = c.nombre;
-      selectClientes.appendChild(option);
-    });
-
-    // Tabla de clientes
-    const tablaClientes = document.getElementById('tabla-clientes').querySelector('tbody');
-    tablaClientes.innerHTML = '';
-    clientes.forEach(c => {
-      const tr = document.createElement('tr');
-      tr.innerHTML = `
-        <td>${c.nombre}</td>
-        <td>${c.telefono || '-'}</td>
-        <td>${c.email || '-'}</td>
-        <td>${restaurante.formatearFecha(c.fecha_registro)}</td>
-        <td>
-          <button class="btn btn-small btn-info" onclick="editarCliente(${c.id_cliente})">Editar</button>
-          <button class="btn btn-small btn-danger" onclick="eliminarCliente(${c.id_cliente})">Eliminar</button>
-        </td>
-      `;
-      tablaClientes.appendChild(tr);
-    });
-
-    // Cargar mesas
-    const mesas = await restaurante.cargarMesas();
-    const selectMesas = document.getElementById('venta-mesa');
-    const gridMesas = document.getElementById('grid-mesas');
-    
-    selectMesas.innerHTML = '<option value="">-- Seleccionar Mesa --</option>';
-    gridMesas.innerHTML = '';
-    
-    mesas.forEach(mesa => {
-      const option = document.createElement('option');
-      option.value = mesa.id_mesa;
-      option.textContent = `Mesa ${mesa.numero_mesa}`;
-      selectMesas.appendChild(option);
-
-      const card = document.createElement('div');
-      card.className = 'card';
-      card.style.textAlign = 'center';
-      card.style.cursor = 'pointer';
-      const disponible = mesa.estado === 'disponible';
-      card.style.opacity = disponible ? '1' : '0.6';
-      card.innerHTML = `
-        <div style="font-size: 2rem;">${disponible ? '🪑' : '🔴'}</div>
-        <div style="font-weight: bold;">Mesa ${mesa.numero_mesa}</div>
-        <div style="font-size: 0.9rem; color: #999;">Cap: ${mesa.capacidad}</div>
-        <div class="badge ${disponible ? 'badge-success' : 'badge-warning'}" style="margin-top: 0.5rem;">
-          ${mesa.estado}
-        </div>
-      `;
-      gridMesas.appendChild(card);
-    });
-
-    // Cargar empleados
-    const empleados = await restaurante.cargarEmpleados();
-    const selectEmpleados = document.getElementById('venta-empleado');
-    const tablaEmpleados = document.getElementById('tabla-empleados').querySelector('tbody');
-    
-    selectEmpleados.innerHTML = '<option value="">-- Seleccionar Empleado --</option>';
-    tablaEmpleados.innerHTML = '';
-    
-    empleados.forEach(emp => {
-      const option = document.createElement('option');
-      option.value = emp.id_empleado;
-      option.textContent = emp.nombre;
-      selectEmpleados.appendChild(option);
-
-      const tr = document.createElement('tr');
-      tr.innerHTML = `
-        <td>${emp.nombre}</td>
-        <td>${emp.puesto}</td>
-        <td>${emp.telefono}</td>
-        <td><span class="badge badge-success">Activo</span></td>
-      `;
-      tablaEmpleados.appendChild(tr);
-    });
-
-    // Cargar categorías
-    const categorias = await restaurante.cargarCategorias();
-    const selectCategorias = document.getElementById('prod-categoria');
-    selectCategorias.innerHTML = '<option value="">-- Seleccionar Categoría --</option>';
-    categorias.forEach(cat => {
-      const option = document.createElement('option');
-      option.value = cat.id_categoria;
-      option.textContent = cat.nombre_categoria;
-      selectCategorias.appendChild(option);
-    });
-
-    // Cargar productos
-    const productos = await restaurante.cargarProductos();
-    const tablaProductos = document.getElementById('tabla-productos').querySelector('tbody');
-    tablaProductos.innerHTML = '';
-    
-    productos.forEach(prod => {
-      const tr = document.createElement('tr');
-      tr.innerHTML = `
-        <td>${prod.nombre_producto}</td>
-        <td>${prod.categorias.nombre_categoria}</td>
-        <td>${restaurante.formatearDinero(prod.precio)}</td>
-        <td>${prod.descripcion || '-'}</td>
-        <td><span class="badge badge-success">Activo</span></td>
-        <td>
-          <button class="btn btn-small btn-info" onclick="editarProducto(${prod.id_producto})">Editar</button>
-          <button class="btn btn-small btn-danger" onclick="eliminarProducto(${prod.id_producto})">Eliminar</button>
-        </td>
-      `;
-      tablaProductos.appendChild(tr);
-    });
-
-    // Cargar selector de productos para ventas
-    await window.cargarProductosEnSelector();
-
-    // Cargar ventas (filtrar si vendedor)
-    const ventas = await restaurante.cargarVentas();
-    const ventasFiltrads = usuarioActual.rol === 'vendedora' 
-      ? ventas.filter(v => v.empleados?.nombre === usuarioActual.nombre)
-      : ventas;
-
-    const tablaVentas = document.getElementById('tabla-ventas').querySelector('tbody');
-    const tablaUltimas = document.getElementById('tabla-ultimas-ventas').querySelector('tbody');
-    
-    tablaVentas.innerHTML = '';
-    tablaUltimas.innerHTML = '';
-    
-    ventasFiltrads.forEach(venta => {
-      const tr = document.createElement('tr');
-      tr.innerHTML = `
-        <td>#${venta.id_venta}</td>
-        <td>${restaurante.formatearFecha(venta.fecha_venta)}</td>
-        <td>${venta.clientes?.nombre || 'Cliente Mostrador'}</td>
-        <td>${venta.mesas?.numero_mesa || '-'}</td>
-        <td>${restaurante.formatearDinero(venta.total)}</td>
-        <td>${venta.metodos_pago?.nombre_metodo || '-'}</td>
-        <td><span class="badge badge-success">Pagada</span></td>
-        <td style="text-align: center;">
-          <button class="btn btn-small btn-info" onclick="window.editarVenta(${venta.id_venta})" title="Editar">✏️ Editar</button>
-          <button class="btn btn-small btn-danger" onclick="window.eliminarVenta(${venta.id_venta})" title="Eliminar" style="margin-left: 0.3rem;">🗑️ Eliminar</button>
-        </td>
-      `;
-      tablaVentas.appendChild(tr);
+    // ===== EDICIÓN INLINE =====
+    window.abrirEditarFila = function(btn) {
+      const tr = btn.closest('tr');
+      if (tr.classList.contains('edit-mode')) return;
       
-      const trUltimas = tr.cloneNode(true);
-      if (tablaUltimas.children.length < 5) {
-        tablaUltimas.appendChild(trUltimas);
-      }
-    });
-
-    // Dashboard
-    const reporteHoy = await restaurante.obtenerReporteDiario(new Date().toISOString().split('T')[0]);
-    document.getElementById('stat-ventas-hoy').textContent = reporteHoy.cantidad;
-    document.getElementById('stat-total-hoy').textContent = restaurante.formatearDinero(reporteHoy.total);
-    document.getElementById('stat-promedio').textContent = restaurante.formatearDinero(reporteHoy.promedio);
-    
-    const ocupadas = mesas.filter(m => m.estado === 'ocupada').length;
-    document.getElementById('stat-mesas').textContent = `${ocupadas}/${mesas.length}`;
-
-    if (usuarioActual.rol === 'admin') {
-      const topProductos = await restaurante.obtenerProductosMasVendidos(7);
-      const tablaTop = document.getElementById('tabla-top-productos').querySelector('tbody');
-      tablaTop.innerHTML = '';
-      topProductos.slice(0, 5).forEach(prod => {
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-          <td>${prod.nombre}</td>
-          <td>${prod.cantidad}</td>
-          <td>${restaurante.formatearDinero(prod.ingresos)}</td>
-        `;
-        tablaTop.appendChild(tr);
-      });
-    }
-  }
-
-  async function testConnection() {
-    try {
-      const result = await window.supabaseClient.from(window.db.productos).select('*').limit(1);
-      const configStatus = document.getElementById('config-db-status');
+      tr.classList.add('edit-mode');
+      const celdas = tr.querySelectorAll('td');
       
-      if (result.error) {
-        configStatus.textContent = '❌ Desconectada';
-      } else {
-        configStatus.textContent = '✅ Conectada';
-      }
-    } catch (err) {
-      console.error('Error:', err);
-    }
-  }
-
-  async function cargarReporteDiario() {
-    const fecha = document.getElementById('reporte-fecha').value;
-    if (!fecha) {
-      alert('Selecciona una fecha');
-      return;
-    }
-    
-    const reporte = await restaurante.obtenerReporteDiario(fecha);
-    const resultado = document.getElementById('resultado-reporte');
-    
-    resultado.innerHTML = `
-      <div class="grid grid-cols-3">
-        <div class="stat-card">
-          <div class="stat-value">${reporte.cantidad}</div>
-          <div class="stat-label">Ventas</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-value">${restaurante.formatearDinero(reporte.total)}</div>
-          <div class="stat-label">Total</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-value">${restaurante.formatearDinero(reporte.promedio)}</div>
-          <div class="stat-label">Promedio</div>
-        </div>
-      </div>
-    `;
-  }
-
-  // ===== USUARIOS =====
-  
-  window.cargarUsuarios = async function() {
-    try {
-      const usuarios = await restaurante.cargarUsuarios();
-      const tabla = document.getElementById('tabla-usuarios').querySelector('tbody');
-      tabla.innerHTML = '';
+      tr.dataset.original = JSON.stringify(Array.from(celdas).slice(0, -1).map(td => td.innerHTML));
       
-      usuarios.forEach(usr => {
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-          <td>${usr.nombre_usuario}</td>
-          <td>${usr.email}</td>
-          <td><span class="badge ${usr.rol === 'admin' ? 'badge-danger' : 'badge-info'}">${usr.rol}</span></td>
-          <td><span class="badge ${usr.activo ? 'badge-success' : 'badge-warning'}">${usr.activo ? 'Activo' : 'Inactivo'}</span></td>
-          <td>${restaurante.formatearFecha(usr.fecha_creacion)}</td>
-          <td>
-            <button class="btn btn-small btn-info" onclick="window.editarUsuario(${usr.id_usuario})">Editar</button>
-            <button class="btn btn-small btn-danger" onclick="window.eliminarUsuario(${usr.id_usuario})">Eliminar</button>
-          </td>
-        `;
-        tabla.appendChild(tr);
-      });
-    } catch (err) {
-      console.error('Error cargando usuarios:', err);
-    }
-  }
-
-  window.editarUsuario = async function(id) {
-    alert('Función en desarrollo');
-  }
-
-  window.eliminarUsuario = async function(id) {
-    if (!confirm('¿Eliminar este usuario?')) return;
-    const result = await restaurante.eliminarUsuario(id);
-    if (result) {
-      alert('✅ Usuario eliminado');
-      await window.cargarUsuarios();
-    }
-  }
-
-  // ===== EDITAR VENTAS =====
-
-  window.editarVenta = async function(idVenta) {
-    const ventas = await restaurante.cargarVentas();
-    const venta = ventas.find(v => v.id_venta === idVenta);
-    
-    if (!venta) {
-      alert('❌ Venta no encontrada');
-      return;
+      for (let i = 0; i < celdas.length - 1; i++) {
+        const celda = celdas[i];
+        const valor = celda.textContent.trim();
+        celda.classList.add('cell-edit');
+        celda.innerHTML = `<input type="text" value="${valor}">`;
+      }
+      
+      const ultima = celdas[celdas.length - 1];
+      ultima.innerHTML = `
+        <button class="btn-save-inline" onclick="window.guardarEditarFila(event)">✅ Guardar</button>
+        <button class="btn-cancel-inline" onclick="window.cancelarEditarFila(event)">❌ Cancelar</button>
+      `;
     }
 
-    if (!confirm(`¿Editar Venta #${idVenta}?`)) return;
+    window.guardarEditarFila = async function(event) {
+      const btn = event.target;
+      const tr = btn.closest('tr');
+      const tipo = tr.dataset.tipo;
+      const id = parseInt(tr.dataset.id);
+      const inputs = tr.querySelectorAll('input');
 
-    const clientes = await restaurante.cargarClientes();
-    const mesas = await restaurante.cargarMesas();
+      try {
+        let datos = {};
 
-    // Crear opciones de clientes
-    let clienteOptions = '0:Mostrador\n';
-    clientes.forEach(c => {
-      clienteOptions += `${c.id_cliente}:${c.nombre}\n`;
+        if (tipo === 'cliente') {
+          datos = { nombre: inputs[0]?.value, telefono: inputs[1]?.value, email: inputs[2]?.value };
+          if (!datos.nombre) { alert('❌ Nombre requerido'); return; }
+          await restaurante.actualizarCliente(id, datos);
+        } 
+        else if (tipo === 'producto') {
+          datos = { nombre_producto: inputs[0]?.value, precio: parseFloat(inputs[1]?.value || 0), descripcion: inputs[2]?.value };
+          if (!datos.nombre_producto || datos.precio <= 0) { alert('❌ Datos inválidos'); return; }
+          await restaurante.actualizarProducto(id, datos);
+        }
+        else if (tipo === 'usuario') {
+          datos = { nombre_usuario: inputs[0]?.value, email: inputs[1]?.value, rol: inputs[2]?.value };
+          if (!datos.nombre_usuario) { alert('❌ Usuario requerido'); return; }
+          await restaurante.actualizarUsuario(id, datos);
+        }
+
+        alert('✅ Actualizado correctamente');
+        window.cargarDatos();
+      } catch (e) {
+        console.error('Error guardar:', e);
+        alert('❌ Error al guardar');
+      }
+    }
+
+    window.cancelarEditarFila = function(event) {
+      const btn = event.target;
+      const tr = btn.closest('tr');
+      const original = JSON.parse(tr.dataset.original);
+      const celdas = tr.querySelectorAll('td');
+      const tipo = tr.dataset.tipo;
+      const id = tr.dataset.id;
+
+      for (let i = 0; i < original.length; i++) {
+        celdas[i].innerHTML = original[i];
+        celdas[i].classList.remove('cell-edit');
+      }
+
+      const ultima = celdas[celdas.length - 1];
+      if (tipo === 'cliente') {
+        ultima.innerHTML = `<button class="btn btn-small btn-info" onclick="window.abrirEditarFila(this)">Editar</button> <button class="btn btn-small btn-danger" onclick="window.eliminarCliente(${id})">Eliminar</button>`;
+      } else if (tipo === 'producto') {
+        ultima.innerHTML = `<button class="btn btn-small btn-info" onclick="window.abrirEditarFila(this)">Editar</button> <button class="btn btn-small btn-danger" onclick="window.eliminarProducto(${id})">Eliminar</button>`;
+      } else if (tipo === 'usuario') {
+        ultima.innerHTML = `<button class="btn btn-small btn-info" onclick="window.abrirEditarFila(this)">Editar</button> <button class="btn btn-small btn-danger" onclick="window.eliminarUsuario(${id})">Eliminar</button>`;
+      }
+
+      tr.classList.remove('edit-mode');
+    }
+
+    // ===== INICIALIZACIÓN =====
+    window.verificarSesion = function() {
+      const sesion = localStorage.getItem('usuarioActual');
+      if (!sesion) return;
+      
+      window.usuarioActual = JSON.parse(sesion);
+      document.getElementById('login-page').classList.add('hidden-section');
+      document.getElementById('app-page').classList.remove('hidden-section');
+      document.getElementById('sidebar-nombre').textContent = window.usuarioActual.nombre_usuario;
+      document.getElementById('sidebar-rol').textContent = window.usuarioActual.rol.toUpperCase();
+      
+      if (window.usuarioActual.rol === 'vendedora') {
+        document.querySelectorAll('.admin-only').forEach(el => el.style.display = 'none');
+      }
+      
+      window.cargarDatos();
+    }
+
+    // Verificar sesión al cargar
+    window.addEventListener('load', () => {
+      window.verificarSesion();
     });
+  </script>
 
-    // Crear opciones de mesas
-    let mesaOptions = '0:Ninguna\n';
-    mesas.forEach(m => {
-      mesaOptions += `${m.id_mesa}:Mesa ${m.numero_mesa}\n`;
-    });
-
-    const nuevoCliente = prompt('Selecciona cliente (ID:Nombre):\n' + clienteOptions, venta.clientes?.nombre || 'Mostrador');
-    if (nuevoCliente === null) return;
-
-    const nuevaMesa = prompt('Selecciona mesa (ID:Nombre):\n' + mesaOptions, venta.mesas?.numero_mesa || '0');
-    if (nuevaMesa === null) return;
-
-    const idClienteNum = nuevoCliente === 'Mostrador' || nuevoCliente === '0' ? null : parseInt(nuevoCliente);
-    const idMesaNum = nuevaMesa === 'Ninguna' || nuevaMesa === '0' ? null : parseInt(nuevaMesa);
-
-    const ventaActualizada = {
-      id_cliente: idClienteNum,
-      id_mesa: idMesaNum,
-      id_empleado: 1, // Mantener igual
-      id_metodo_pago: 1 // Mantener igual
-    };
-
-    const result = await restaurante.actualizarVenta(idVenta, ventaActualizada);
-    if (result) {
-      alert('✅ Venta actualizada correctamente');
-      cargarDatos();
-    }
-  }
-
-  window.eliminarVenta = async function(idVenta) {
-    if (!confirm('⚠️ Esto eliminará la venta y todos sus productos. ¿Confirmar?')) return;
-    const result = await restaurante.eliminarVenta(idVenta);
-    if (result) {
-      alert('✅ Venta eliminada');
-      cargarDatos();
-    }
-  }
-
-  document.getElementById('form-usuario').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const formData = new FormData(e.target);
-    const usuario = Object.fromEntries(formData);
-    
-    const result = await restaurante.crearUsuario(usuario);
-    if (result) {
-      alert('✅ Usuario creado exitosamente');
-      e.target.reset();
-      await window.cargarUsuarios();
-    }
-  });
-
-  // ===== CARRITO DE VENTAS =====
-  
-  window.agregarProductoAlCarrito = function() {
-    const selector = document.getElementById('venta-selector-producto');
-    const selectedOption = selector.selectedOptions[0];
-    
-    if (!selectedOption || !selectedOption.dataset.id) {
-      alert('❌ Selecciona un producto');
-      return;
-    }
-
-    const producto = {
-      id_producto: parseInt(selectedOption.dataset.id),
-      nombre_producto: selectedOption.text.split(' - ')[0].trim(),
-      precio: parseFloat(selectedOption.dataset.precio)
-    };
-
-    restaurante.agregarAlCarrito(producto);
-    selector.value = '';
-    console.log('✅ Producto agregado:', producto);
-  }
-
-  // Cargar productos en el selector
-  window.cargarProductosEnSelector = async function() {
-    const productos = await restaurante.cargarProductos();
-    const selector = document.getElementById('venta-selector-producto');
-    selector.innerHTML = '<option value="">-- Seleccionar Producto --</option>';
-    
-    productos.forEach(prod => {
-      const option = document.createElement('option');
-      option.value = prod.id_producto;
-      option.text = `${prod.nombre_producto} - ${restaurante.formatearDinero(prod.precio)}`;
-      option.dataset.id = prod.id_producto;
-      option.dataset.precio = prod.precio;
-      selector.appendChild(option);
-    });
-  }
-
-  // Formulario de Ventas
-  document.getElementById('form-venta').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    
-    const venta = {
-      id_cliente: document.getElementById('venta-cliente').value || null,
-      id_mesa: document.getElementById('venta-mesa').value || null,
-      id_empleado: parseInt(document.getElementById('venta-empleado').value),
-      id_metodo_pago: parseInt(document.getElementById('venta-metodo').value)
-    };
-
-    if (!venta.id_empleado || !venta.id_metodo_pago) {
-      alert('❌ Selecciona empleado y método de pago');
-      return;
-    }
-
-    if (restaurante.carrito.length === 0) {
-      alert('❌ Agrega al menos un producto al carrito');
-      return;
-    }
-
-    const detalles = restaurante.carrito.map(item => ({
-      id_producto: item.id_producto,
-      cantidad: item.cantidad,
-      precio_unitario: item.precio
-    }));
-
-    const result = await restaurante.crearVenta(venta, detalles);
-    if (result) {
-      alert('✅ Venta registrada exitosamente');
-      e.target.reset();
-      restaurante.carrito = [];
-      restaurante.actualizarCarrito();
-      cargarDatos();
-    }
-  });
-
-  // Formularios - Clientes
-  document.getElementById('form-cliente').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const formData = new FormData(e.target);
-    const cliente = Object.fromEntries(formData);
-    
-    const result = await restaurante.crearCliente(cliente);
-    if (result) {
-      alert('✅ Cliente agregado exitosamente');
-      e.target.reset();
-      location.reload();
-    }
-  });
-
-  // Formulario - Productos
-  document.getElementById('form-producto').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const formData = new FormData(e.target);
-    
-    const producto = {
-      nombre_producto: formData.get('nombre'),
-      id_categoria: parseInt(formData.get('categoria')),
-      precio: parseFloat(formData.get('precio')),
-      descripcion: formData.get('descripcion'),
-      activo: true
-    };
-    
-    const errors = restaurante.validarProducto(producto);
-    if (errors.length > 0) {
-      alert('❌ Errores:\n' + errors.join('\n'));
-      return;
-    }
-    
-    const result = await restaurante.crearProducto(producto);
-    if (result) {
-      alert('✅ Producto agregado exitosamente');
-      e.target.reset();
-      cargarProductosEnSelector();
-      location.reload();
-    }
-  });
-
-  // ===== FUNCIONES DE EDITAR =====
-
-  window.editarCliente = async function(idCliente) {
-    const clientes = await restaurante.cargarClientes();
-    const cliente = clientes.find(c => c.id_cliente === idCliente);
-    
-    if (!cliente) return;
-
-    const nombre = prompt('Nombre:', cliente.nombre);
-    if (nombre === null) return;
-
-    const telefono = prompt('Teléfono:', cliente.telefono || '');
-    const email = prompt('Email:', cliente.email || '');
-
-    const result = await restaurante.actualizarCliente(idCliente, { nombre, telefono, email });
-    if (result) {
-      alert('✅ Cliente actualizado');
-      cargarDatos();
-    }
-  }
-
-  window.eliminarCliente = async function(idCliente) {
-    if (!confirm('¿Eliminar este cliente?')) return;
-    const result = await restaurante.eliminarCliente(idCliente);
-    if (result) {
-      alert('✅ Cliente eliminado');
-      cargarDatos();
-    }
-  }
-
-  window.editarProducto = async function(idProducto) {
-    const productos = await restaurante.cargarProductos();
-    const producto = productos.find(p => p.id_producto === idProducto);
-    
-    if (!producto) return;
-
-    const nombre = prompt('Nombre:', producto.nombre_producto);
-    if (nombre === null) return;
-
-    const precio = prompt('Precio:', producto.precio);
-    if (precio === null) return;
-
-    const descripcion = prompt('Descripción:', producto.descripcion || '');
-
-    const result = await restaurante.actualizarProducto(idProducto, {
-      nombre_producto: nombre,
-      id_categoria: producto.categorias.id_categoria,
-      precio: parseFloat(precio),
-      descripcion: descripcion
-    });
-    if (result) {
-      alert('✅ Producto actualizado');
-      cargarDatos();
-    }
-  }
-
-  window.eliminarProducto = async function(idProducto) {
-    if (!confirm('¿Eliminar este producto?')) return;
-    const result = await restaurante.eliminarProducto(idProducto);
-    if (result) {
-      alert('✅ Producto eliminado');
-      cargarDatos();
-    }
-  }
-</script>
 </body>
 </html>

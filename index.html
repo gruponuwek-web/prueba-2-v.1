@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Sistema de Gestión de Restaurante</title>
   
-  
   <!-- CSS -->
   <link rel="stylesheet" href="css/styles.css">
 </head>
@@ -377,12 +376,69 @@
     <section id="configuracion" class="page-section hidden">
       <h2 style="margin-bottom: 1.5rem;">⚙️ Configuración</h2>
       
+      <!-- ESTADO DE CONEXIÓN -->
       <div class="card">
         <div class="card-header">Estado de Conexión</div>
         <div class="card-body">
           <p><strong>Base de datos:</strong> <span id="config-db-status">Verificando...</span></p>
           <p><strong>URL Supabase:</strong> vuxuwgwhbseyhhiypcrg.supabase.co</p>
           <button class="btn btn-info" onclick="testConnection()">Probar Conexión</button>
+        </div>
+      </div>
+
+      <!-- GESTIÓN DE USUARIOS -->
+      <div class="card" style="margin-top: 2rem;">
+        <div class="card-header">👤 Gestión de Usuarios</div>
+        <div class="card-body">
+          <form id="form-usuario" style="display: grid; gap: 1rem;">
+            <div class="grid grid-cols-2">
+              <div class="form-group">
+                <label for="usr-nombre">Nombre de Usuario</label>
+                <input type="text" id="usr-nombre" name="nombre_usuario" required>
+              </div>
+              <div class="form-group">
+                <label for="usr-email">Email</label>
+                <input type="email" id="usr-email" name="email" required>
+              </div>
+              <div class="form-group">
+                <label for="usr-password">Contraseña</label>
+                <input type="password" id="usr-password" name="password" required>
+              </div>
+              <div class="form-group">
+                <label for="usr-rol">Rol</label>
+                <select id="usr-rol" name="rol" required>
+                  <option value="">-- Seleccionar Rol --</option>
+                  <option value="admin">Admin</option>
+                  <option value="vendedora">Vendedor</option>
+                </select>
+              </div>
+            </div>
+            <button type="submit" class="btn btn-primary">Crear Usuario</button>
+          </form>
+        </div>
+      </div>
+
+      <!-- LISTA DE USUARIOS -->
+      <div class="card" style="margin-top: 2rem;">
+        <div class="card-header">📋 Lista de Usuarios</div>
+        <div class="card-body">
+          <table id="tabla-usuarios">
+            <thead>
+              <tr>
+                <th>Nombre</th>
+                <th>Email</th>
+                <th>Rol</th>
+                <th>Estado</th>
+                <th>Fecha Creación</th>
+                <th>Acciones</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td colspan="6" style="text-align: center; padding: 2rem; color: #999;">Cargando usuarios...</td>
+              </tr>
+            </tbody>
+          </table>
         </div>
       </div>
     </section>
@@ -409,6 +465,11 @@ const db = window.db || {};
       
       document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
       this.classList.add('active');
+
+      // Cargar usuarios si se abre Configuración
+      if (sectionId === 'configuracion') {
+        setTimeout(() => cargarUsuarios(), 100);
+      }
     });
   });
 
@@ -560,22 +621,22 @@ const db = window.db || {};
   }
 
   async function testConnection() {
-  try {
-    const result = await window.supabaseClient.from(window.db.productos).select('*').limit(1);
-    const status = document.getElementById('connection-status');
-    const configStatus = document.getElementById('config-db-status');
-    
-    if (result.error) {
-      status.innerHTML = '❌ Error de conexión';
-      configStatus.textContent = '❌ Desconectada';
-    } else {
-      status.innerHTML = '✅ Conectado a Supabase';
-      configStatus.textContent = '✅ Conectada';
+    try {
+      const result = await window.supabaseClient.from(window.db.productos).select('*').limit(1);
+      const status = document.getElementById('connection-status');
+      const configStatus = document.getElementById('config-db-status');
+      
+      if (result.error) {
+        status.innerHTML = '❌ Error de conexión';
+        configStatus.textContent = '❌ Desconectada';
+      } else {
+        status.innerHTML = '✅ Conectado a Supabase';
+        configStatus.textContent = '✅ Conectada';
+      }
+    } catch (err) {
+      console.error('Error:', err);
     }
-  } catch (err) {
-    console.error('Error:', err);
   }
-}
 
   async function cargarReporteDiario() {
     const fecha = document.getElementById('reporte-fecha').value;
@@ -606,6 +667,60 @@ const db = window.db || {};
         Reporte generado para ${fecha}
       </p>
     `;
+  }
+
+  // ===== USUARIOS =====
+  
+  async function cargarUsuarios() {
+    try {
+      const usuarios = await restaurante.cargarUsuarios();
+      const tabla = document.getElementById('tabla-usuarios').querySelector('tbody');
+      tabla.innerHTML = '';
+      
+      usuarios.forEach(usr => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${usr.nombre_usuario}</td>
+          <td>${usr.email}</td>
+          <td><span class="badge ${usr.rol === 'admin' ? 'badge-danger' : 'badge-info'}">${usr.rol}</span></td>
+          <td><span class="badge ${usr.activo ? 'badge-success' : 'badge-warning'}">${usr.activo ? 'Activo' : 'Inactivo'}</span></td>
+          <td>${restaurante.formatearFecha(usr.fecha_creacion)}</td>
+          <td>
+            <button class="btn btn-small btn-info" onclick="editarUsuario(${usr.id_usuario})">Editar</button>
+            <button class="btn btn-small btn-danger" onclick="eliminarUsuario(${usr.id_usuario})">Eliminar</button>
+          </td>
+        `;
+        tabla.appendChild(tr);
+      });
+    } catch (err) {
+      console.error('Error cargando usuarios:', err);
+    }
+  }
+
+  document.getElementById('form-usuario').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const formData = new FormData(e.target);
+    const usuario = Object.fromEntries(formData);
+    
+    const result = await restaurante.crearUsuario(usuario);
+    if (result) {
+      alert('✅ Usuario creado exitosamente');
+      e.target.reset();
+      await cargarUsuarios();
+    }
+  });
+
+  async function editarUsuario(id) {
+    alert('Función en desarrollo');
+  }
+
+  async function eliminarUsuario(id) {
+    if (!confirm('¿Eliminar este usuario?')) return;
+    const result = await restaurante.eliminarUsuario(id);
+    if (result) {
+      alert('✅ Usuario eliminado');
+      await cargarUsuarios();
+    }
   }
 
   // Formularios

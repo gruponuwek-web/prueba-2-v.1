@@ -222,6 +222,67 @@ window.restaurante = {
       return [];
     }
   }
+
+  async cargarUsuarios() {
+    try {
+      const { data, error } = await window.supabaseClient
+        .from('usuarios')
+        .select('*')
+        .order('fecha_creacion', { ascending: false });
+      if (error) throw error;
+      return data || [];
+    } catch (err) {
+      console.error('❌ Error cargando usuarios:', err);
+      return [];
+    }
+  },
+
+  async crearUsuario(usuario) {
+    try {
+      if (!usuario.nombre_usuario || !usuario.email || !usuario.password || !usuario.rol) {
+        alert('❌ Todos los campos son requeridos');
+        return null;
+      }
+
+      const { data, error } = await window.supabaseClient
+        .from('usuarios')
+        .insert({
+          nombre_usuario: usuario.nombre_usuario,
+          email: usuario.email,
+          password: usuario.password,
+          rol: usuario.rol,
+          activo: true,
+          fecha_creacion: new Date().toISOString()
+        });
+      
+      if (error) throw error;
+      console.log('✅ Usuario creado:', data);
+      return data;
+    } catch (err) {
+      console.error('❌ Error creando usuario:', err);
+      alert('❌ Error: ' + err.message);
+      return null;
+    }
+  },
+
+  async eliminarUsuario(id) {
+    try {
+      const { error } = await window.supabaseClient
+        .from('usuarios')
+        .delete()
+        .eq('id_usuario', id);
+      
+      if (error) throw error;
+      console.log('✅ Usuario eliminado');
+      return true;
+    } catch (err) {
+      console.error('❌ Error:', err);
+      alert('❌ Error: ' + err.message);
+      return false;
+    }
+  }
 };
 
 console.log('✅ app.js cargado correctamente');
+
+  

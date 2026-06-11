@@ -134,18 +134,24 @@ window.restaurante = {
   // ===== CRUD USUARIOS CON SUPABASE AUTH =====
   crearUsuario: async function(datos) {
     try {
-      // 1. Crear usuario en Supabase Auth (contraseña hasheada automáticamente)
-      const { data: authData, error: authError } = await window.supabaseClient.auth.admin.createUser({
+      // 1. Crear usuario en Supabase Auth (con signUp, funciona con clave pública)
+      const { data: authData, error: authError } = await window.supabaseClient.auth.signUp({
         email: datos.email,
         password: datos.password,
-        email_confirm: true
+        options: {
+          emailRedirectTo: `${window.location.origin}/prueba-2-v.1`
+        }
       });
       
       if (authError) throw authError;
+      
+      if (!authData.user || !authData.user.id) {
+        throw new Error('No se obtuvo UUID del usuario creado');
+      }
 
       const userId = authData.user.id;
 
-      // 2. Crear perfil en tabla perfiles
+      // 2. Crear perfil en tabla perfiles (con UUID correcto)
       const { data, error } = await window.supabaseClient.from('perfiles').insert([{
         id: userId,
         nombre_usuario: datos.nombre_usuario,
@@ -154,7 +160,12 @@ window.restaurante = {
         fecha_creacion: datos.fecha_creacion || new Date().toISOString()
       }]).select();
       
-      return error ? null : (data?.[0] || null);
+      if (error) {
+        console.error('Error insertando en perfiles:', error);
+        throw error;
+      }
+      
+      return data?.[0] || null;
     } catch (e) {
       console.error('Error crearUsuario:', e);
       alert('❌ Error: ' + e.message);
@@ -175,13 +186,9 @@ window.restaurante = {
       
       if (perfilError) throw perfilError;
 
-      // Si hay contraseña, actualizar en Supabase Auth
-      if (datos.password) {
-        await window.supabaseClient.auth.admin.updateUserById(id, {
-          password: datos.password
-        });
-      }
-
+      // Nota: Los cambios de contraseña deben hacerse directamente en Auth
+      // Aquí solo actualizamos el perfil (nombre, rol, estado)
+      
       return true;
     } catch (e) {
       console.error('Error actualizarUsuario:', e);

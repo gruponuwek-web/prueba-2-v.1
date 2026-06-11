@@ -430,7 +430,72 @@ window.eliminarUsuario = async function(id) {
   }
 };
 
-// ===== CARGAR DATOS INICIALES =====
+// ===== MODAL EDITAR VENTA =====
+window.ventaEnEdicion = null;
+
+window.abrirEditarVenta = async function(id) {
+  const ventas = await restaurante.cargarVentas();
+  const venta = ventas.find(v => v.id_venta === id);
+  
+  if (!venta) {
+    alert('❌ Venta no encontrada');
+    return;
+  }
+
+  window.ventaEnEdicion = venta;
+
+  // Cargar opciones
+  const clientes = await restaurante.cargarClientes();
+  const mesas = await restaurante.cargarMesas();
+
+  // Poblar selectores
+  let clienteHtml = '<option value="">-- Mostrador --</option>';
+  clientes.forEach(c => clienteHtml += `<option value="${c.id_cliente}" ${venta.id_cliente === c.id_cliente ? 'selected' : ''}>${c.nombre}</option>`);
+  document.getElementById('modal-venta-cliente').innerHTML = clienteHtml;
+
+  let mesaHtml = '<option value="">-- Ninguna --</option>';
+  mesas.forEach(m => mesaHtml += `<option value="${m.id_mesa}" ${venta.id_mesa === m.id_mesa ? 'selected' : ''}>Mesa ${m.numero_mesa}</option>`);
+  document.getElementById('modal-venta-mesa').innerHTML = mesaHtml;
+
+  document.getElementById('modal-venta-metodo').value = venta.id_metodo_pago || '1';
+  document.getElementById('modal-venta-canal').value = '';
+  document.getElementById('modal-venta-estado').value = venta.estatus || 'Pagada';
+  document.getElementById('modal-venta-total').value = venta.total.toFixed(2);
+  document.getElementById('modal-venta-obs').value = '';
+  document.getElementById('modal-venta-fecha').value = venta.fecha_venta ? venta.fecha_venta.split('T')[0] : '';
+
+  // Mostrar modal
+  document.getElementById('modal-editar-venta').style.display = 'flex';
+}
+
+window.cerrarModalVenta = function() {
+  document.getElementById('modal-editar-venta').style.display = 'none';
+  window.ventaEnEdicion = null;
+}
+
+window.guardarEditarVentaModal = async function() {
+  if (!window.ventaEnEdicion) return;
+
+  const id = window.ventaEnEdicion.id_venta;
+  const idCliente = document.getElementById('modal-venta-cliente').value;
+  const idMesa = document.getElementById('modal-venta-mesa').value;
+  const estado = document.getElementById('modal-venta-estado').value;
+
+  const datos = {
+    id_cliente: idCliente ? parseInt(idCliente) : null,
+    id_mesa: idMesa ? parseInt(idMesa) : null,
+    estatus: estado
+  };
+
+  const result = await restaurante.actualizarVenta(id, datos);
+  if (result) {
+    alert('✅ Venta actualizada');
+    window.cerrarModalVenta();
+    window.cargarDatos();
+  } else {
+    alert('❌ Error al actualizar');
+  }
+}
 window.cargarDatos = async function() {
   try {
     // Cargar selectores
@@ -543,6 +608,7 @@ window.cargarDatos = async function() {
           <td>${restaurante.formatearDinero(v.total)}</td>
           <td><span class="badge badge-success">${v.estatus}</span></td>
           <td>
+            <button class="btn btn-small btn-info" onclick="window.abrirEditarVenta(${v.id_venta})">Editar</button>
             <button class="btn btn-small btn-danger" onclick="window.eliminarVenta(${v.id_venta})">Eliminar</button>
           </td>
         `;

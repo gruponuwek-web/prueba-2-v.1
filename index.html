@@ -560,7 +560,8 @@ const db = window.db || {};
   }
 
   async function testConnection() {
-    const result = await supabaseClient.from(window.db.productos).select('*').limit(1);
+  try {
+    const result = await window.supabaseClient.from(window.db.productos).select('*').limit(1);
     const status = document.getElementById('connection-status');
     const configStatus = document.getElementById('config-db-status');
     
@@ -571,7 +572,10 @@ const db = window.db || {};
       status.innerHTML = '✅ Conectado a Supabase';
       configStatus.textContent = '✅ Conectada';
     }
+  } catch (err) {
+    console.error('Error:', err);
   }
+}
 
   async function cargarReporteDiario() {
     const fecha = document.getElementById('reporte-fecha').value;

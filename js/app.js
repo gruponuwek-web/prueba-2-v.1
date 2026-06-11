@@ -45,9 +45,11 @@ window.restaurante = {
       return [];
     }
   },
+  // ===== USUARIOS CON SUPABASE AUTH (actualizado) =====
   cargarUsuarios: async function() {
     try {
-      const { data, error } = await window.supabaseClient.from('usuarios').select('*').eq('activo', true).order('nombre_usuario');
+      // Cargar desde tabla perfiles (conexión con Supabase Auth)
+      const { data, error } = await window.supabaseClient.from('perfiles').select('*').eq('activo', true).order('nombre_usuario');
       return error ? [] : (data || []);
     } catch (e) {
       console.error('Error cargarUsuarios:', e);
@@ -129,30 +131,81 @@ window.restaurante = {
       return false;
     }
   },
+  // ===== CRUD USUARIOS CON SUPABASE AUTH =====
   crearUsuario: async function(datos) {
     try {
-      const { data, error } = await window.supabaseClient.from('usuarios').insert([datos]).select();
+      // 1. Crear usuario en Supabase Auth (contraseña hasheada automáticamente)
+      const { data: authData, error: authError } = await window.supabaseClient.auth.admin.createUser({
+        email: datos.email,
+        password: datos.password,
+        email_confirm: true
+      });
+      
+      if (authError) throw authError;
+
+      const userId = authData.user.id;
+
+      // 2. Crear perfil en tabla perfiles
+      const { data, error } = await window.supabaseClient.from('perfiles').insert([{
+        id: userId,
+        nombre_usuario: datos.nombre_usuario,
+        rol: datos.rol || 'vendedora',
+        activo: true,
+        fecha_creacion: datos.fecha_creacion || new Date().toISOString()
+      }]).select();
+      
       return error ? null : (data?.[0] || null);
     } catch (e) {
       console.error('Error crearUsuario:', e);
+      alert('❌ Error: ' + e.message);
       return null;
     }
   },
   actualizarUsuario: async function(id, datos) {
     try {
-      const { error } = await window.supabaseClient.from('usuarios').update(datos).eq('id_usuario', id);
-      return !error;
+      // Actualizar perfil
+      const { error: perfilError } = await window.supabaseClient
+        .from('perfiles')
+        .update({
+          nombre_usuario: datos.nombre_usuario,
+          rol: datos.rol,
+          activo: datos.activo !== undefined ? datos.activo : true
+        })
+        .eq('id', id);
+      
+      if (perfilError) throw perfilError;
+
+      // Si hay contraseña, actualizar en Supabase Auth
+      if (datos.password) {
+        await window.supabaseClient.auth.admin.updateUserById(id, {
+          password: datos.password
+        });
+      }
+
+      return true;
     } catch (e) {
       console.error('Error actualizarUsuario:', e);
+      alert('❌ Error: ' + e.message);
       return false;
     }
   },
   eliminarUsuario: async function(id) {
     try {
-      const { error } = await window.supabaseClient.from('usuarios').update({ activo: false }).eq('id_usuario', id);
-      return !error;
+      // 1. Marcar perfil como inactivo (soft delete)
+      const { error: perfilError } = await window.supabaseClient
+        .from('perfiles')
+        .update({ activo: false })
+        .eq('id', id);
+      
+      if (perfilError) throw perfilError;
+
+      // 2. Opcional: Eliminar de Supabase Auth completamente
+      // await window.supabaseClient.auth.admin.deleteUser(id);
+
+      return true;
     } catch (e) {
       console.error('Error eliminarUsuario:', e);
+      alert('❌ Error: ' + e.message);
       return false;
     }
   },
@@ -247,7 +300,7 @@ window.cargarDatos = async function() {
       }
     }
 
-    // USUARIOS
+    // USUARIOS (ahora desde tabla perfiles)
     const tbUsuarios = document.getElementById('tabla-usuarios')?.querySelector('tbody');
     if (tbUsuarios) {
       tbUsuarios.innerHTML = '';
@@ -256,7 +309,7 @@ window.cargarDatos = async function() {
       } else {
         usuarios.forEach(u => {
           const tr = document.createElement('tr');
-          tr.innerHTML = `<td>${u.nombre_usuario}</td><td>${u.email}</td><td>${u.rol}</td><td><button class="btn btn-small btn-info" onclick="window.abrirEditarUsuario(${u.id_usuario})">Editar</button> <button class="btn btn-small btn-danger" onclick="window.eliminarUsuarioConfirm(${u.id_usuario})">Eliminar</button></td>`;
+          tr.innerHTML = `<td>${u.nombre_usuario}</td><td>${u.email || '-'}</td><td>${u.rol}</td><td><button class="btn btn-small btn-info" onclick="window.abrirEditarUsuario('${u.id}')">Editar</button> <button class="btn btn-small btn-danger" onclick="window.eliminarUsuarioConfirm('${u.id}')">Eliminar</button></td>`;
           tbUsuarios.appendChild(tr);
         });
       }
@@ -410,7 +463,7 @@ window.eliminarProductoConfirm = async function(id) {
   if (await restaurante.eliminarProducto(id)) { alert('✅ Eliminado'); window.cargarDatos(); }
 };
 
-// ===== CRUD USUARIOS =====
+// ===== CRUD USUARIOS (actualizado para Supabase Auth) =====
 window.crearUsuario = async function() {
   const nombre = document.getElementById('form-usuario-nombre').value.trim();
   const email = document.getElementById('form-usuario-email').value.trim();
@@ -424,11 +477,11 @@ window.crearUsuario = async function() {
 
 window.abrirEditarUsuario = async function(id) {
   const usuarios = await restaurante.cargarUsuarios();
-  const usuario = usuarios.find(u => u.id_usuario === id);
+  const usuario = usuarios.find(u => u.id === id);
   if (!usuario) return;
   window.usuarioEnEdicion = usuario;
   document.getElementById('modal-usuario-nombre').value = usuario.nombre_usuario;
-  document.getElementById('modal-usuario-email').value = usuario.email;
+  document.getElementById('modal-usuario-email').value = usuario.email || '';
   document.getElementById('modal-usuario-rol').value = usuario.rol;
   document.getElementById('modal-usuario-password').value = '';
   document.getElementById('modal-usuario-password').type = 'password';
@@ -460,7 +513,7 @@ window.guardarEditarUsuarioModal = async function() {
   const datos = { nombre_usuario: nombre, email, rol };
   if (password) datos.password = password;
   
-  if (await restaurante.actualizarUsuario(window.usuarioEnEdicion.id_usuario, datos)) {
+  if (await restaurante.actualizarUsuario(window.usuarioEnEdicion.id, datos)) {
     alert('✅ Usuario actualizado');
     window.cerrarModalUsuario();
     window.cargarDatos();
@@ -699,7 +752,71 @@ window.eliminarVentaConfirm = async function(id) {
   if (await restaurante.eliminarVenta(id)) { alert('✅ Eliminada'); window.cargarDatos(); }
 };
 
-// ===== CARRITO =====
+// ===== CREAR USUARIOS DESDE EMPLEADOS =====
+window.mapearPuestoArol = function(puesto) {
+  const puestoLower = (puesto || '').toLowerCase();
+  
+  if (puestoLower.includes('administrador') || puestoLower.includes('admin')) return 'admin';
+  if (puestoLower.includes('mesero') || puestoLower.includes('mesera') || puestoLower.includes('mesero/a')) return 'vendedora';
+  if (puestoLower.includes('cajero') || puestoLower.includes('cajera')) return 'vendedora';
+  
+  return 'vendedora'; // Rol por defecto
+};
+
+window.crearUsuariosDesdeEmpleados = async function() {
+  if (!confirm('¿Crear usuarios para TODOS los empleados?')) return;
+  
+  console.log('👷 Creando usuarios desde empleados...');
+  
+  try {
+    const empleados = await restaurante.cargarEmpleados();
+    
+    if (empleados.length === 0) {
+      alert('❌ No hay empleados');
+      return;
+    }
+    
+    let creados = 0;
+    let errores = 0;
+    
+    for (const emp of empleados) {
+      try {
+        // Generar email y contraseña temporal
+        const email = `${emp.nombre.toLowerCase().replace(/\s+/g, '.')}@restaurante.local`;
+        const passwordTemp = `Temp${emp.id_empleado}${Math.random().toString(36).substring(2, 8)}`;
+        const rol = window.mapearPuestoArol(emp.puesto);
+        
+        // Crear usuario
+        const result = await restaurante.crearUsuario({
+          nombre_usuario: emp.nombre,
+          email: email,
+          password: passwordTemp,
+          rol: rol,
+          activo: true,
+          fecha_creacion: new Date().toISOString()
+        });
+        
+        if (result) {
+          console.log(`✅ ${emp.nombre} (${rol})`);
+          creados++;
+        } else {
+          console.log(`⚠️ ${emp.nombre} - error al crear`);
+          errores++;
+        }
+      } catch (e) {
+        console.error(`Error con ${emp.nombre}:`, e);
+        errores++;
+      }
+    }
+    
+    alert(`✅ Usuarios creados: ${creados}\n⚠️ Errores: ${errores}`);
+    window.cargarDatos();
+    
+  } catch (e) {
+    console.error('Error:', e);
+    alert('❌ Error al procesar empleados');
+  }
+};
 window.agregarProductoAlCarrito = async function() {
   const idProducto = document.getElementById('venta-producto').value;
   if (!idProducto) { alert('Selecciona producto'); return; }
@@ -793,4 +910,4 @@ window.registrarVenta = async function() {
   } else alert('❌ Error');
 };
 
-console.log('✅ app.js cargado correctamente');
+console.log('✅ app.js cargado correctamente (Supabase Auth)');

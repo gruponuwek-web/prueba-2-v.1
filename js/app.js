@@ -13,6 +13,76 @@ window.restaurante = {
     return new Date(fecha).toLocaleDateString('es-MX');
   },
 
+  // ===== CARRITO DE VENTAS =====
+  carrito: [],
+
+  agregarAlCarrito(producto) {
+    const existe = this.carrito.find(item => item.id_producto === producto.id_producto);
+    if (existe) {
+      existe.cantidad += 1;
+    } else {
+      this.carrito.push({
+        id_producto: producto.id_producto,
+        nombre_producto: producto.nombre_producto,
+        precio: producto.precio,
+        cantidad: 1
+      });
+    }
+    this.actualizarCarrito();
+  },
+
+  eliminarDelCarrito(idProducto) {
+    this.carrito = this.carrito.filter(item => item.id_producto !== idProducto);
+    this.actualizarCarrito();
+  },
+
+  cambiarCantidad(idProducto, cantidad) {
+    const item = this.carrito.find(item => item.id_producto === idProducto);
+    if (item && cantidad > 0) {
+      item.cantidad = cantidad;
+    } else if (cantidad <= 0) {
+      this.eliminarDelCarrito(idProducto);
+    }
+    this.actualizarCarrito();
+  },
+
+  actualizarCarrito() {
+    const tbody = document.getElementById('tabla-carrito').querySelector('tbody');
+    tbody.innerHTML = '';
+
+    if (this.carrito.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 1rem; color: #999;">Carrito vacío</td></tr>';
+      document.getElementById('venta-subtotal').textContent = '$0';
+      document.getElementById('venta-iva').textContent = '$0';
+      document.getElementById('venta-total').textContent = '$0';
+      return;
+    }
+
+    let subtotal = 0;
+    this.carrito.forEach(item => {
+      subtotal += item.precio * item.cantidad;
+      
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td>${item.nombre_producto}</td>
+        <td><input type="number" value="${item.cantidad}" min="1" onchange="restaurante.cambiarCantidad(${item.id_producto}, this.value)" style="width: 50px;"></td>
+        <td>${this.formatearDinero(item.precio)}</td>
+        <td>${this.formatearDinero(item.precio * item.cantidad)}</td>
+        <td><button class="btn btn-small btn-danger" onclick="restaurante.eliminarDelCarrito(${item.id_producto})">✕</button></td>
+      `;
+      tbody.appendChild(tr);
+    });
+
+    const iva = subtotal * 0.16;
+    const total = subtotal + iva;
+
+    document.getElementById('venta-subtotal').textContent = this.formatearDinero(subtotal);
+    document.getElementById('venta-iva').textContent = this.formatearDinero(iva);
+    document.getElementById('venta-total').textContent = this.formatearDinero(total);
+  },
+
+  // ===== CLIENTES =====
+
   async cargarClientes() {
     try {
       const { data, error } = await window.supabaseClient
@@ -26,6 +96,64 @@ window.restaurante = {
       return [];
     }
   },
+
+  async crearCliente(cliente) {
+    try {
+      const { data, error } = await window.supabaseClient
+        .from('clientes')
+        .insert({
+          nombre: cliente.nombre,
+          telefono: cliente.telefono || null,
+          email: cliente.email || null,
+          fecha_registro: new Date().toISOString()
+        });
+      if (error) throw error;
+      console.log('✅ Cliente creado');
+      return data;
+    } catch (err) {
+      console.error('❌ Error:', err);
+      alert('❌ Error: ' + err.message);
+      return null;
+    }
+  },
+
+  async actualizarCliente(idCliente, cliente) {
+    try {
+      const { data, error } = await window.supabaseClient
+        .from('clientes')
+        .update({
+          nombre: cliente.nombre,
+          telefono: cliente.telefono || null,
+          email: cliente.email || null
+        })
+        .eq('id_cliente', idCliente);
+      if (error) throw error;
+      console.log('✅ Cliente actualizado');
+      return true;
+    } catch (err) {
+      console.error('❌ Error:', err);
+      alert('❌ Error: ' + err.message);
+      return false;
+    }
+  },
+
+  async eliminarCliente(idCliente) {
+    try {
+      const { error } = await window.supabaseClient
+        .from('clientes')
+        .delete()
+        .eq('id_cliente', idCliente);
+      if (error) throw error;
+      console.log('✅ Cliente eliminado');
+      return true;
+    } catch (err) {
+      console.error('❌ Error:', err);
+      alert('❌ Error: ' + err.message);
+      return false;
+    }
+  },
+
+  // ===== MESAS =====
 
   async cargarMesas() {
     try {
@@ -46,6 +174,8 @@ window.restaurante = {
     }
   },
 
+  // ===== EMPLEADOS =====
+
   async cargarEmpleados() {
     try {
       const { data, error } = await window.supabaseClient
@@ -65,6 +195,8 @@ window.restaurante = {
     }
   },
 
+  // ===== CATEGORÍAS =====
+
   async cargarCategorias() {
     try {
       const { data, error } = await window.supabaseClient
@@ -81,6 +213,8 @@ window.restaurante = {
       return [];
     }
   },
+
+  // ===== PRODUCTOS =====
 
   async cargarProductos() {
     try {
@@ -125,6 +259,43 @@ window.restaurante = {
     }
   },
 
+  async actualizarProducto(idProducto, producto) {
+    try {
+      const { data, error } = await window.supabaseClient
+        .from('productos')
+        .update({
+          nombre_producto: producto.nombre_producto,
+          id_categoria: producto.id_categoria,
+          precio: producto.precio,
+          descripcion: producto.descripcion || null
+        })
+        .eq('id_producto', idProducto);
+      if (error) throw error;
+      console.log('✅ Producto actualizado');
+      return true;
+    } catch (err) {
+      console.error('❌ Error:', err);
+      alert('❌ Error: ' + err.message);
+      return false;
+    }
+  },
+
+  async eliminarProducto(idProducto) {
+    try {
+      const { error } = await window.supabaseClient
+        .from('productos')
+        .delete()
+        .eq('id_producto', idProducto);
+      if (error) throw error;
+      console.log('✅ Producto eliminado');
+      return true;
+    } catch (err) {
+      console.error('❌ Error:', err);
+      alert('❌ Error: ' + err.message);
+      return false;
+    }
+  },
+
   validarProducto(producto) {
     const errors = [];
     if (!producto.nombre_producto) errors.push('El nombre es requerido');
@@ -132,6 +303,8 @@ window.restaurante = {
     if (producto.precio <= 0) errors.push('El precio debe ser mayor a 0');
     return errors;
   },
+
+  // ===== VENTAS =====
 
   async cargarVentas() {
     try {
@@ -155,19 +328,57 @@ window.restaurante = {
     }
   },
 
-  async crearCliente(cliente) {
+  async crearVenta(venta, detalles) {
     try {
-      const { data, error } = await window.supabaseClient
-        .from('clientes')
+      if (!venta.id_empleado || !venta.id_metodo_pago) {
+        alert('❌ Empleado y método de pago son requeridos');
+        return null;
+      }
+      if (detalles.length === 0) {
+        alert('❌ Agrega al menos un producto');
+        return null;
+      }
+
+      // Calcular subtotal
+      const subtotal = detalles.reduce((sum, det) => sum + (det.cantidad * det.precio_unitario), 0);
+      const iva = subtotal * 0.16;
+      const total = subtotal + iva;
+
+      const { data: ventaData, error: ventaError } = await window.supabaseClient
+        .from('ventas')
         .insert({
-          nombre: cliente.nombre,
-          telefono: cliente.telefono || null,
-          email: cliente.email || null,
-          fecha_registro: new Date().toISOString()
-        });
-      if (error) throw error;
-      console.log('✅ Cliente creado');
-      return data;
+          id_cliente: venta.id_cliente || null,
+          id_mesa: venta.id_mesa || null,
+          id_empleado: venta.id_empleado,
+          id_metodo_pago: venta.id_metodo_pago,
+          fecha_venta: new Date().toISOString(),
+          subtotal: subtotal,
+          iva: iva,
+          total: total,
+          estatus: 'pagada'
+        })
+        .select();
+
+      if (ventaError) throw ventaError;
+      const idVenta = ventaData[0].id_venta;
+
+      // Insertar detalles
+      const detallesConIdVenta = detalles.map(det => ({
+        id_venta: idVenta,
+        id_producto: det.id_producto,
+        cantidad: det.cantidad,
+        precio_unitario: det.precio_unitario,
+        subtotal: det.cantidad * det.precio_unitario
+      }));
+
+      const { error: detalleError } = await window.supabaseClient
+        .from('detalle_ventas')
+        .insert(detallesConIdVenta);
+
+      if (detalleError) throw detalleError;
+
+      console.log('✅ Venta creada exitosamente');
+      return ventaData[0];
     } catch (err) {
       console.error('❌ Error:', err);
       alert('❌ Error: ' + err.message);
@@ -223,7 +434,7 @@ window.restaurante = {
   },
 
   // ===== USUARIOS =====
-  
+
   async cargarUsuarios() {
     try {
       const { data, error } = await window.supabaseClient
@@ -263,6 +474,28 @@ window.restaurante = {
       console.error('❌ Error creando usuario:', err);
       alert('❌ Error: ' + err.message);
       return null;
+    }
+  },
+
+  async actualizarUsuario(idUsuario, usuario) {
+    try {
+      const { data, error } = await window.supabaseClient
+        .from('usuarios')
+        .update({
+          nombre_usuario: usuario.nombre_usuario,
+          email: usuario.email,
+          rol: usuario.rol,
+          activo: usuario.activo
+        })
+        .eq('id_usuario', idUsuario);
+      
+      if (error) throw error;
+      console.log('✅ Usuario actualizado');
+      return true;
+    } catch (err) {
+      console.error('❌ Error:', err);
+      alert('❌ Error: ' + err.message);
+      return false;
     }
   },
 

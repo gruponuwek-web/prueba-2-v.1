@@ -4,456 +4,626 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Sistema de Gestión de Restaurante</title>
-  
-  <!-- CSS -->
   <link rel="stylesheet" href="css/styles.css">
+  <style>
+    .login-container {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+    .login-box {
+      background: white;
+      padding: 3rem;
+      border-radius: 10px;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+      width: 100%;
+      max-width: 400px;
+    }
+    .login-box h1 {
+      text-align: center;
+      margin-bottom: 2rem;
+      color: #333;
+    }
+    .login-box .form-group {
+      margin-bottom: 1.5rem;
+    }
+    .login-box label {
+      display: block;
+      margin-bottom: 0.5rem;
+      font-weight: 600;
+      color: #333;
+    }
+    .login-box input {
+      width: 100%;
+      padding: 0.75rem;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      font-size: 1rem;
+      box-sizing: border-box;
+    }
+    .login-box input:focus {
+      outline: none;
+      border-color: #667eea;
+      box-shadow: 0 0 5px rgba(102, 126, 234, 0.5);
+    }
+    .login-box button {
+      width: 100%;
+      padding: 0.75rem;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border: none;
+      border-radius: 5px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.2s;
+    }
+    .login-box button:hover {
+      transform: translateY(-2px);
+    }
+    .login-error {
+      background: #fee;
+      color: #c33;
+      padding: 0.75rem;
+      border-radius: 5px;
+      margin-bottom: 1rem;
+      display: none;
+    }
+    .hidden-section {
+      display: none !important;
+    }
+  </style>
 </head>
 <body>
 
-<div class="wrapper">
-  <!-- SIDEBAR -->
-  <aside class="sidebar">
-    <h2 style="margin-bottom: 2rem;">🍽️ Restaurante</h2>
-    <nav>
-      <ul>
-        <li><a href="#dashboard" class="nav-link active">📊 Dashboard</a></li>
-        <li><a href="#ventas" class="nav-link">💰 Ventas</a></li>
-        <li><a href="#productos" class="nav-link">🍽️ Productos</a></li>
-        <li><a href="#mesas" class="nav-link">🪑 Mesas</a></li>
-        <li><a href="#clientes" class="nav-link">👥 Clientes</a></li>
-        <li><a href="#reportes" class="nav-link">📈 Reportes</a></li>
-        <li><a href="#empleados" class="nav-link">👔 Empleados</a></li>
-        <li><a href="#configuracion" class="nav-link">⚙️ Configuración</a></li>
-      </ul>
-    </nav>
-  </aside>
-
-  <!-- MAIN CONTENT -->
-  <main class="main-content">
-    <header>
-      <h1>🍽️ Sistema de Gestión de Restaurante</h1>
-      <p>Manage your restaurant with ease | Gestiona tu restaurante con facilidad</p>
-      <div style="margin-top: 1rem; font-size: 12px;">
-        <span id="connection-status">⏳ Conectando...</span>
+<!-- LOGIN PAGE -->
+<div id="login-page" class="login-container">
+  <div class="login-box">
+    <h1>🍽️ Restaurante</h1>
+    <div class="login-error" id="login-error"></div>
+    <form id="form-login" onsubmit="hacerLogin(event)">
+      <div class="form-group">
+        <label for="login-usuario">Usuario</label>
+        <input type="text" id="login-usuario" name="usuario" required autofocus>
       </div>
-    </header>
-
-    <!-- DASHBOARD -->
-    <section id="dashboard" class="page-section">
-      <h2 style="margin-bottom: 1.5rem;">📊 Dashboard</h2>
-      
-      <div class="grid grid-cols-4">
-        <div class="stat-card">
-          <div class="stat-value" id="stat-ventas-hoy">0</div>
-          <div class="stat-label">Ventas Hoy</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-value" id="stat-total-hoy">$0</div>
-          <div class="stat-label">Total Hoy</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-value" id="stat-promedio">$0</div>
-          <div class="stat-label">Promedio por Venta</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-value" id="stat-mesas">0/0</div>
-          <div class="stat-label">Mesas Ocupadas</div>
-        </div>
+      <div class="form-group">
+        <label for="login-password">Contraseña</label>
+        <input type="password" id="login-password" name="password" required>
       </div>
+      <button type="submit">Iniciar Sesión</button>
+    </form>
+    <p style="text-align: center; margin-top: 1rem; color: #999; font-size: 0.9rem;">
+      Demo: admin / admin123 o vendedor / vendedor123
+    </p>
+  </div>
+</div>
 
-      <div class="grid grid-cols-2" style="margin-top: 2rem;">
+<!-- APP PAGE -->
+<div id="app-page" style="display: none;">
+  <div class="wrapper">
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+        <h2>🍽️ Restaurante</h2>
+        <button onclick="hacerLogout()" class="btn btn-small btn-danger" title="Cerrar sesión">🚪</button>
+      </div>
+      <div style="margin-bottom: 1rem; font-size: 0.9rem; color: #999;">
+        <strong id="usuario-nombre"></strong>
+        <div id="usuario-rol" style="font-size: 0.8rem;"></div>
+      </div>
+      <nav>
+        <ul>
+          <li><a href="#dashboard" class="nav-link active">📊 Dashboard</a></li>
+          <li><a href="#ventas" class="nav-link">💰 Ventas</a></li>
+          <li class="admin-only"><a href="#productos" class="nav-link">🍽️ Productos</a></li>
+          <li><a href="#mesas" class="nav-link">🪑 Mesas</a></li>
+          <li class="admin-only"><a href="#clientes" class="nav-link">👥 Clientes</a></li>
+          <li class="admin-only"><a href="#reportes" class="nav-link">📈 Reportes</a></li>
+          <li class="admin-only"><a href="#empleados" class="nav-link">👔 Empleados</a></li>
+          <li class="admin-only"><a href="#configuracion" class="nav-link">⚙️ Configuración</a></li>
+        </ul>
+      </nav>
+    </aside>
+
+    <!-- MAIN CONTENT -->
+    <main class="main-content">
+      <header>
+        <h1>🍽️ Sistema de Gestión de Restaurante</h1>
+        <p>Manage your restaurant with ease | Gestiona tu restaurante con facilidad</p>
+        <div style="margin-top: 1rem; font-size: 12px;">
+          <span id="connection-status">⏳ Conectando...</span>
+        </div>
+      </header>
+
+      <!-- DASHBOARD -->
+      <section id="dashboard" class="page-section">
+        <h2 style="margin-bottom: 1.5rem;">📊 Dashboard</h2>
+        
+        <div class="grid grid-cols-4">
+          <div class="stat-card">
+            <div class="stat-value" id="stat-ventas-hoy">0</div>
+            <div class="stat-label">Ventas Hoy</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value" id="stat-total-hoy">$0</div>
+            <div class="stat-label">Total Hoy</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value" id="stat-promedio">$0</div>
+            <div class="stat-label">Promedio por Venta</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value" id="stat-mesas">0/0</div>
+            <div class="stat-label">Mesas Ocupadas</div>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2" style="margin-top: 2rem;">
+          <div class="card">
+            <div class="card-header">📋 Últimas Ventas</div>
+            <div class="card-body">
+              <table id="tabla-ultimas-ventas">
+                <thead>
+                  <tr>
+                    <th>Fecha</th>
+                    <th>Cliente</th>
+                    <th>Total</th>
+                    <th>Estado</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td colspan="4" style="text-align: center; color: #999;">Cargando...</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="card admin-only">
+            <div class="card-header">🌟 Productos Más Vendidos</div>
+            <div class="card-body">
+              <table id="tabla-top-productos">
+                <thead>
+                  <tr>
+                    <th>Producto</th>
+                    <th>Cantidad</th>
+                    <th>Ingresos</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td colspan="3" style="text-align: center; color: #999;">Cargando...</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- VENTAS -->
+      <section id="ventas" class="page-section hidden">
+        <h2 style="margin-bottom: 1.5rem;">💰 Gestión de Ventas</h2>
+        
         <div class="card">
-          <div class="card-header">📋 Últimas Ventas</div>
+          <div class="card-header">Crear Nueva Venta</div>
           <div class="card-body">
-            <table id="tabla-ultimas-ventas">
+            <form id="form-venta" style="display: grid; gap: 1rem;">
+              <div class="grid grid-cols-2">
+                <div class="form-group">
+                  <label for="venta-cliente">Cliente</label>
+                  <select id="venta-cliente" name="cliente">
+                    <option value="">-- Seleccionar Cliente --</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label for="venta-mesa">Mesa</label>
+                  <select id="venta-mesa" name="mesa">
+                    <option value="">-- Seleccionar Mesa --</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label for="venta-empleado">Empleado</label>
+                  <select id="venta-empleado" name="empleado">
+                    <option value="">-- Seleccionar Empleado --</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label for="venta-metodo">Método de Pago</label>
+                  <select id="venta-metodo" name="metodo">
+                    <option value="">-- Seleccionar Método --</option>
+                    <option value="1">Efectivo</option>
+                    <option value="2">Tarjeta de Crédito</option>
+                    <option value="3">Tarjeta de Débito</option>
+                    <option value="4">Transferencia</option>
+                  </select>
+                </div>
+              </div>
+
+              <div style="border: 1px solid #ddd; padding: 1rem; border-radius: 5px; background: #f9f9f9;">
+                <label style="font-weight: 600; margin-bottom: 0.5rem; display: block;">➕ Agregar Productos</label>
+                <div style="display: flex; gap: 1rem; margin-bottom: 1rem;">
+                  <select id="venta-selector-producto" style="flex: 1; padding: 0.75rem; border: 1px solid #ddd; border-radius: 5px;">
+                    <option value="">-- Seleccionar Producto --</option>
+                  </select>
+                  <button type="button" class="btn btn-primary" onclick="agregarProductoAlCarrito()">Agregar</button>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label>Productos en el Carrito</label>
+                <table id="tabla-carrito" style="width: 100%; border: 1px solid #ddd; border-collapse: collapse;">
+                  <thead>
+                    <tr style="background: #f0f0f0;">
+                      <th style="padding: 10px; text-align: left; border: 1px solid #ddd;">Producto</th>
+                      <th style="padding: 10px; text-align: center; border: 1px solid #ddd;">Cantidad</th>
+                      <th style="padding: 10px; text-align: right; border: 1px solid #ddd;">Precio</th>
+                      <th style="padding: 10px; text-align: right; border: 1px solid #ddd;">Subtotal</th>
+                      <th style="padding: 10px; text-align: center; border: 1px solid #ddd;">Acción</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td colspan="5" style="text-align: center; padding: 1rem; color: #999;">
+                        Carrito vacío
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+              <div style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 1rem; margin-top: 1rem;">
+                <div style="text-align: right; font-weight: bold;">
+                  Subtotal: <span id="venta-subtotal">$0.00</span>
+                </div>
+                <div style="text-align: right; font-weight: bold;">
+                  IVA (16%): <span id="venta-iva">$0.00</span>
+                </div>
+                <div style="text-align: right; font-weight: bold; color: var(--color-secondary); font-size: 1.2rem;">
+                  Total: <span id="venta-total">$0.00</span>
+                </div>
+                <button type="submit" class="btn btn-success">💾 Registrar Venta</button>
+              </div>
+            </form>
+          </div>
+        </div>
+
+        <div class="card" style="margin-top: 2rem;">
+          <div class="card-header">Historial de Ventas</div>
+          <div class="card-body">
+            <table id="tabla-ventas">
               <thead>
                 <tr>
+                  <th>ID Venta</th>
                   <th>Fecha</th>
                   <th>Cliente</th>
+                  <th>Mesa</th>
                   <th>Total</th>
+                  <th>Método de Pago</th>
                   <th>Estado</th>
                 </tr>
               </thead>
               <tbody>
                 <tr>
-                  <td colspan="4" style="text-align: center; color: #999;">Cargando...</td>
+                  <td colspan="7" style="text-align: center; padding: 2rem; color: #999;">Cargando ventas...</td>
                 </tr>
               </tbody>
             </table>
           </div>
         </div>
+      </section>
 
+      <!-- PRODUCTOS -->
+      <section id="productos" class="page-section hidden">
+        <h2 style="margin-bottom: 1.5rem;">🍽️ Gestión de Productos</h2>
+        
         <div class="card">
-          <div class="card-header">🌟 Productos Más Vendidos</div>
+          <div class="card-header">Agregar Nuevo Producto</div>
           <div class="card-body">
-            <table id="tabla-top-productos">
+            <form id="form-producto" style="display: grid; gap: 1rem;">
+              <div class="grid grid-cols-2">
+                <div class="form-group">
+                  <label for="prod-nombre">Nombre del Producto</label>
+                  <input type="text" id="prod-nombre" name="nombre" required>
+                </div>
+                <div class="form-group">
+                  <label for="prod-categoria">Categoría</label>
+                  <select id="prod-categoria" name="categoria" required>
+                    <option value="">-- Seleccionar Categoría --</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label for="prod-precio">Precio (MXN)</label>
+                  <input type="number" id="prod-precio" name="precio" step="0.01" min="0" required>
+                </div>
+                <div class="form-group">
+                  <label for="prod-descripcion">Descripción</label>
+                  <textarea id="prod-descripcion" name="descripcion" rows="1"></textarea>
+                </div>
+              </div>
+              <button type="submit" class="btn btn-primary">Agregar Producto</button>
+            </form>
+          </div>
+        </div>
+
+        <div class="card" style="margin-top: 2rem;">
+          <div class="card-header">Catálogo de Productos</div>
+          <div class="card-body">
+            <table id="tabla-productos">
               <thead>
                 <tr>
-                  <th>Producto</th>
-                  <th>Cantidad</th>
-                  <th>Ingresos</th>
+                  <th>Nombre</th>
+                  <th>Categoría</th>
+                  <th>Precio</th>
+                  <th>Descripción</th>
+                  <th>Estado</th>
+                  <th>Acciones</th>
                 </tr>
               </thead>
               <tbody>
                 <tr>
-                  <td colspan="3" style="text-align: center; color: #999;">Cargando...</td>
+                  <td colspan="6" style="text-align: center; padding: 2rem; color: #999;">Cargando productos...</td>
                 </tr>
               </tbody>
             </table>
           </div>
         </div>
-      </div>
-    </section>
+      </section>
 
-    <!-- VENTAS -->
-    <section id="ventas" class="page-section hidden">
-      <h2 style="margin-bottom: 1.5rem;">💰 Gestión de Ventas</h2>
-      
-      <div class="card">
-        <div class="card-header">Crear Nueva Venta</div>
-        <div class="card-body">
-          <form id="form-venta" style="display: grid; gap: 1rem;">
-            <div class="grid grid-cols-2">
-              <div class="form-group">
-                <label for="venta-cliente">Cliente</label>
-                <select id="venta-cliente" name="cliente">
-                  <option value="">-- Seleccionar Cliente --</option>
-                </select>
-              </div>
-              <div class="form-group">
-                <label for="venta-mesa">Mesa</label>
-                <select id="venta-mesa" name="mesa">
-                  <option value="">-- Seleccionar Mesa --</option>
-                </select>
-              </div>
-              <div class="form-group">
-                <label for="venta-empleado">Empleado</label>
-                <select id="venta-empleado" name="empleado">
-                  <option value="">-- Seleccionar Empleado --</option>
-                </select>
-              </div>
-              <div class="form-group">
-                <label for="venta-metodo">Método de Pago</label>
-                <select id="venta-metodo" name="metodo">
-                  <option value="">-- Seleccionar Método --</option>
-                  <option value="1">Efectivo</option>
-                  <option value="2">Tarjeta de Crédito</option>
-                  <option value="3">Tarjeta de Débito</option>
-                  <option value="4">Transferencia</option>
-                </select>
-              </div>
-            </div>
-
-            <div class="form-group">
-              <label for="venta-productos">Productos</label>
-              <table id="tabla-carrito" style="width: 100%; border: 1px solid #ddd;">
-                <thead>
-                  <tr>
-                    <th>Producto</th>
-                    <th>Cantidad</th>
-                    <th>Precio</th>
-                    <th>Subtotal</th>
-                    <th>Acción</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr>
-                    <td colspan="5" style="text-align: center; padding: 1rem; color: #999;">
-                      Selecciona productos del menú
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-
-            <div class="grid grid-cols-4" style="margin-top: 1rem;">
-              <div style="text-align: right; font-weight: bold;">
-                Subtotal: <span id="venta-subtotal">$0</span>
-              </div>
-              <div style="text-align: right; font-weight: bold;">
-                IVA (16%): <span id="venta-iva">$0</span>
-              </div>
-              <div style="text-align: right; font-weight: bold; color: var(--color-secondary);">
-                Total: <span id="venta-total" style="font-size: 1.3rem;">$0</span>
-              </div>
-              <button type="submit" class="btn btn-success">Registrar Venta</button>
-            </div>
-          </form>
+      <!-- MESAS -->
+      <section id="mesas" class="page-section hidden">
+        <h2 style="margin-bottom: 1.5rem;">🪑 Gestión de Mesas</h2>
+        
+        <div class="grid grid-cols-4" id="grid-mesas">
+          <p style="grid-column: 1/-1; text-align: center; color: #999;">Cargando mesas...</p>
         </div>
-      </div>
+      </section>
 
-      <div class="card" style="margin-top: 2rem;">
-        <div class="card-header">Historial de Ventas</div>
-        <div class="card-body">
-          <table id="tabla-ventas">
-            <thead>
-              <tr>
-                <th>ID Venta</th>
-                <th>Fecha</th>
-                <th>Cliente</th>
-                <th>Mesa</th>
-                <th>Total</th>
-                <th>Método de Pago</th>
-                <th>Estado</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td colspan="7" style="text-align: center; padding: 2rem; color: #999;">Cargando ventas...</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </section>
-
-    <!-- PRODUCTOS -->
-    <section id="productos" class="page-section hidden">
-      <h2 style="margin-bottom: 1.5rem;">🍽️ Gestión de Productos</h2>
-      
-      <div class="card">
-        <div class="card-header">Agregar Nuevo Producto</div>
-        <div class="card-body">
-          <form id="form-producto" style="display: grid; gap: 1rem;">
-            <div class="grid grid-cols-2">
-              <div class="form-group">
-                <label for="prod-nombre">Nombre del Producto</label>
-                <input type="text" id="prod-nombre" name="nombre" required>
+      <!-- CLIENTES -->
+      <section id="clientes" class="page-section hidden">
+        <h2 style="margin-bottom: 1.5rem;">👥 Gestión de Clientes</h2>
+        
+        <div class="card">
+          <div class="card-header">Agregar Nuevo Cliente</div>
+          <div class="card-body">
+            <form id="form-cliente" style="display: grid; gap: 1rem;">
+              <div class="grid grid-cols-2">
+                <div class="form-group">
+                  <label for="cli-nombre">Nombre</label>
+                  <input type="text" id="cli-nombre" name="nombre" required>
+                </div>
+                <div class="form-group">
+                  <label for="cli-telefono">Teléfono</label>
+                  <input type="tel" id="cli-telefono" name="telefono">
+                </div>
+                <div class="form-group" style="grid-column: 1/-1;">
+                  <label for="cli-email">Email</label>
+                  <input type="email" id="cli-email" name="email">
+                </div>
               </div>
-              <div class="form-group">
-                <label for="prod-categoria">Categoría</label>
-                <select id="prod-categoria" name="categoria" required>
-                  <option value="">-- Seleccionar Categoría --</option>
-                </select>
-              </div>
-              <div class="form-group">
-                <label for="prod-precio">Precio (MXN)</label>
-                <input type="number" id="prod-precio" name="precio" step="0.01" min="0" required>
-              </div>
-              <div class="form-group">
-                <label for="prod-descripcion">Descripción</label>
-                <textarea id="prod-descripcion" name="descripcion" rows="1"></textarea>
-              </div>
-            </div>
-            <button type="submit" class="btn btn-primary">Agregar Producto</button>
-          </form>
-        </div>
-      </div>
-
-      <div class="card" style="margin-top: 2rem;">
-        <div class="card-header">Catálogo de Productos</div>
-        <div class="card-body">
-          <table id="tabla-productos">
-            <thead>
-              <tr>
-                <th>Nombre</th>
-                <th>Categoría</th>
-                <th>Precio</th>
-                <th>Descripción</th>
-                <th>Estado</th>
-                <th>Acciones</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td colspan="6" style="text-align: center; padding: 2rem; color: #999;">Cargando productos...</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </section>
-
-    <!-- MESAS -->
-    <section id="mesas" class="page-section hidden">
-      <h2 style="margin-bottom: 1.5rem;">🪑 Gestión de Mesas</h2>
-      
-      <div class="grid grid-cols-4" id="grid-mesas">
-        <p style="grid-column: 1/-1; text-align: center; color: #999;">Cargando mesas...</p>
-      </div>
-    </section>
-
-    <!-- CLIENTES -->
-    <section id="clientes" class="page-section hidden">
-      <h2 style="margin-bottom: 1.5rem;">👥 Gestión de Clientes</h2>
-      
-      <div class="card">
-        <div class="card-header">Agregar Nuevo Cliente</div>
-        <div class="card-body">
-          <form id="form-cliente" style="display: grid; gap: 1rem;">
-            <div class="grid grid-cols-2">
-              <div class="form-group">
-                <label for="cli-nombre">Nombre</label>
-                <input type="text" id="cli-nombre" name="nombre" required>
-              </div>
-              <div class="form-group">
-                <label for="cli-telefono">Teléfono</label>
-                <input type="tel" id="cli-telefono" name="telefono">
-              </div>
-              <div class="form-group" style="grid-column: 1/-1;">
-                <label for="cli-email">Email</label>
-                <input type="email" id="cli-email" name="email">
-              </div>
-            </div>
-            <button type="submit" class="btn btn-primary">Agregar Cliente</button>
-          </form>
-        </div>
-      </div>
-
-      <div class="card" style="margin-top: 2rem;">
-        <div class="card-header">Lista de Clientes</div>
-        <div class="card-body">
-          <table id="tabla-clientes">
-            <thead>
-              <tr>
-                <th>Nombre</th>
-                <th>Teléfono</th>
-                <th>Email</th>
-                <th>Fecha Registro</th>
-                <th>Acciones</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td colspan="5" style="text-align: center; padding: 2rem; color: #999;">Cargando clientes...</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </section>
-
-    <!-- REPORTES -->
-    <section id="reportes" class="page-section hidden">
-      <h2 style="margin-bottom: 1.5rem;">📈 Reportes</h2>
-      
-      <div class="card">
-        <div class="card-header">Reporte Diario</div>
-        <div class="card-body">
-          <div class="form-group" style="max-width: 300px;">
-            <label for="reporte-fecha">Selecciona una fecha</label>
-            <input type="date" id="reporte-fecha" style="width: 100%;">
+              <button type="submit" class="btn btn-primary">Agregar Cliente</button>
+            </form>
           </div>
-          <button class="btn btn-primary" onclick="cargarReporteDiario()">Generar Reporte</button>
         </div>
-      </div>
 
-      <div class="card" style="margin-top: 2rem;">
-        <div class="card-header">Resultados del Reporte</div>
-        <div class="card-body" id="resultado-reporte">
-          <p style="text-align: center; color: #999;">Selecciona una fecha y genera el reporte</p>
+        <div class="card" style="margin-top: 2rem;">
+          <div class="card-header">Lista de Clientes</div>
+          <div class="card-body">
+            <table id="tabla-clientes">
+              <thead>
+                <tr>
+                  <th>Nombre</th>
+                  <th>Teléfono</th>
+                  <th>Email</th>
+                  <th>Fecha Registro</th>
+                  <th>Acciones</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td colspan="5" style="text-align: center; padding: 2rem; color: #999;">Cargando clientes...</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
         </div>
-      </div>
-    </section>
+      </section>
 
-    <!-- EMPLEADOS -->
-    <section id="empleados" class="page-section hidden">
-      <h2 style="margin-bottom: 1.5rem;">👔 Gestión de Empleados</h2>
-      
-      <div class="card">
-        <div class="card-header">Lista de Empleados</div>
-        <div class="card-body">
-          <table id="tabla-empleados">
-            <thead>
-              <tr>
-                <th>Nombre</th>
-                <th>Puesto</th>
-                <th>Teléfono</th>
-                <th>Estado</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td colspan="4" style="text-align: center; padding: 2rem; color: #999;">Cargando empleados...</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </section>
-
-    <!-- CONFIGURACIÓN -->
-    <section id="configuracion" class="page-section hidden">
-      <h2 style="margin-bottom: 1.5rem;">⚙️ Configuración</h2>
-      
-      <!-- ESTADO DE CONEXIÓN -->
-      <div class="card">
-        <div class="card-header">Estado de Conexión</div>
-        <div class="card-body">
-          <p><strong>Base de datos:</strong> <span id="config-db-status">Verificando...</span></p>
-          <p><strong>URL Supabase:</strong> vuxuwgwhbseyhhiypcrg.supabase.co</p>
-          <button class="btn btn-info" onclick="testConnection()">Probar Conexión</button>
-        </div>
-      </div>
-
-      <!-- GESTIÓN DE USUARIOS -->
-      <div class="card" style="margin-top: 2rem;">
-        <div class="card-header">👤 Gestión de Usuarios</div>
-        <div class="card-body">
-          <form id="form-usuario" style="display: grid; gap: 1rem;">
-            <div class="grid grid-cols-2">
-              <div class="form-group">
-                <label for="usr-nombre">Nombre de Usuario</label>
-                <input type="text" id="usr-nombre" name="nombre_usuario" required>
-              </div>
-              <div class="form-group">
-                <label for="usr-email">Email</label>
-                <input type="email" id="usr-email" name="email" required>
-              </div>
-              <div class="form-group">
-                <label for="usr-password">Contraseña</label>
-                <input type="password" id="usr-password" name="password" required>
-              </div>
-              <div class="form-group">
-                <label for="usr-rol">Rol</label>
-                <select id="usr-rol" name="rol" required>
-                  <option value="">-- Seleccionar Rol --</option>
-                  <option value="admin">Admin</option>
-                  <option value="vendedora">Vendedor</option>
-                </select>
-              </div>
+      <!-- REPORTES -->
+      <section id="reportes" class="page-section hidden">
+        <h2 style="margin-bottom: 1.5rem;">📈 Reportes</h2>
+        
+        <div class="card">
+          <div class="card-header">Reporte Diario</div>
+          <div class="card-body">
+            <div class="form-group" style="max-width: 300px;">
+              <label for="reporte-fecha">Selecciona una fecha</label>
+              <input type="date" id="reporte-fecha" style="width: 100%;">
             </div>
-            <button type="submit" class="btn btn-primary">Crear Usuario</button>
-          </form>
+            <button class="btn btn-primary" onclick="cargarReporteDiario()">Generar Reporte</button>
+          </div>
         </div>
-      </div>
 
-      <!-- LISTA DE USUARIOS -->
-      <div class="card" style="margin-top: 2rem;">
-        <div class="card-header">📋 Lista de Usuarios</div>
-        <div class="card-body">
-          <table id="tabla-usuarios">
-            <thead>
-              <tr>
-                <th>Nombre</th>
-                <th>Email</th>
-                <th>Rol</th>
-                <th>Estado</th>
-                <th>Fecha Creación</th>
-                <th>Acciones</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td colspan="6" style="text-align: center; padding: 2rem; color: #999;">Cargando usuarios...</td>
-              </tr>
-            </tbody>
-          </table>
+        <div class="card" style="margin-top: 2rem;">
+          <div class="card-header">Resultados del Reporte</div>
+          <div class="card-body" id="resultado-reporte">
+            <p style="text-align: center; color: #999;">Selecciona una fecha y genera el reporte</p>
+          </div>
         </div>
-      </div>
-    </section>
-  </main>
+      </section>
+
+      <!-- EMPLEADOS -->
+      <section id="empleados" class="page-section hidden">
+        <h2 style="margin-bottom: 1.5rem;">👔 Gestión de Empleados</h2>
+        
+        <div class="card">
+          <div class="card-header">Lista de Empleados</div>
+          <div class="card-body">
+            <table id="tabla-empleados">
+              <thead>
+                <tr>
+                  <th>Nombre</th>
+                  <th>Puesto</th>
+                  <th>Teléfono</th>
+                  <th>Estado</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td colspan="4" style="text-align: center; padding: 2rem; color: #999;">Cargando empleados...</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- CONFIGURACIÓN -->
+      <section id="configuracion" class="page-section hidden">
+        <h2 style="margin-bottom: 1.5rem;">⚙️ Configuración</h2>
+        
+        <div class="card">
+          <div class="card-header">Estado de Conexión</div>
+          <div class="card-body">
+            <p><strong>Base de datos:</strong> <span id="config-db-status">Verificando...</span></p>
+            <p><strong>URL Supabase:</strong> vuxuwgwhbseyhhiypcrg.supabase.co</p>
+            <button class="btn btn-info" onclick="testConnection()">Probar Conexión</button>
+          </div>
+        </div>
+
+        <div class="card" style="margin-top: 2rem;">
+          <div class="card-header">👤 Gestión de Usuarios</div>
+          <div class="card-body">
+            <form id="form-usuario" style="display: grid; gap: 1rem;">
+              <div class="grid grid-cols-2">
+                <div class="form-group">
+                  <label for="usr-nombre">Nombre de Usuario</label>
+                  <input type="text" id="usr-nombre" name="nombre_usuario" required>
+                </div>
+                <div class="form-group">
+                  <label for="usr-email">Email</label>
+                  <input type="email" id="usr-email" name="email" required>
+                </div>
+                <div class="form-group">
+                  <label for="usr-password">Contraseña</label>
+                  <input type="password" id="usr-password" name="password" required>
+                </div>
+                <div class="form-group">
+                  <label for="usr-rol">Rol</label>
+                  <select id="usr-rol" name="rol" required>
+                    <option value="">-- Seleccionar Rol --</option>
+                    <option value="admin">Admin</option>
+                    <option value="vendedora">Vendedor</option>
+                  </select>
+                </div>
+              </div>
+              <button type="submit" class="btn btn-primary">Crear Usuario</button>
+            </form>
+          </div>
+        </div>
+
+        <div class="card" style="margin-top: 2rem;">
+          <div class="card-header">📋 Lista de Usuarios</div>
+          <div class="card-body">
+            <table id="tabla-usuarios">
+              <thead>
+                <tr>
+                  <th>Nombre</th>
+                  <th>Email</th>
+                  <th>Rol</th>
+                  <th>Estado</th>
+                  <th>Fecha Creación</th>
+                  <th>Acciones</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td colspan="6" style="text-align: center; padding: 2rem; color: #999;">Cargando usuarios...</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
 </div>
 
-<script>
-const db = window.db || {};
-</script>
-
-<!-- SCRIPTS - ORDEN IMPORTANTE -->
+<script>const db = window.db || {};</script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.38.1"></script>
 <script src="js/config.js"></script>
 <script src="js/app.js"></script>
 <script>
+  // ===== AUTENTICACIÓN =====
+  
+  let usuarioActual = null;
+
+  function hacerLogin(event) {
+    event.preventDefault();
+    const usuario = document.getElementById('login-usuario').value;
+    const password = document.getElementById('login-password').value;
+    
+    // Demo users (en producción, validar contra Supabase)
+    const usuariosDemo = {
+      'admin': { password: 'admin123', rol: 'admin', nombre: 'Administrador' },
+      'vendedor': { password: 'vendedor123', rol: 'vendedora', nombre: 'Vendedor' }
+    };
+
+    if (usuariosDemo[usuario] && usuariosDemo[usuario].password === password) {
+      usuarioActual = {
+        nombre_usuario: usuario,
+        rol: usuariosDemo[usuario].rol,
+        nombre: usuariosDemo[usuario].nombre
+      };
+      localStorage.setItem('usuarioActual', JSON.stringify(usuarioActual));
+      mostrarApp();
+    } else {
+      const error = document.getElementById('login-error');
+      error.textContent = '❌ Usuario o contraseña incorrectos';
+      error.style.display = 'block';
+    }
+  }
+
+  function hacerLogout() {
+    if (confirm('¿Cerrar sesión?')) {
+      usuarioActual = null;
+      localStorage.removeItem('usuarioActual');
+      document.getElementById('login-page').style.display = 'flex';
+      document.getElementById('app-page').style.display = 'none';
+      document.getElementById('login-usuario').value = '';
+      document.getElementById('login-password').value = '';
+      document.getElementById('login-error').style.display = 'none';
+    }
+  }
+
+  function mostrarApp() {
+    document.getElementById('login-page').style.display = 'none';
+    document.getElementById('app-page').style.display = 'block';
+    
+    document.getElementById('usuario-nombre').textContent = usuarioActual.nombre;
+    document.getElementById('usuario-rol').textContent = `[${usuarioActual.rol.toUpperCase()}]`;
+    
+    // Mostrar/ocultar secciones según rol
+    if (usuarioActual.rol === 'vendedora') {
+      document.querySelectorAll('.admin-only').forEach(el => {
+        el.classList.add('hidden-section');
+      });
+    }
+    
+    cargarDatos();
+  }
+
+  function verificarSesion() {
+    const sesion = localStorage.getItem('usuarioActual');
+    if (sesion) {
+      usuarioActual = JSON.parse(sesion);
+      mostrarApp();
+    }
+  }
+
   // Navegación
   document.querySelectorAll('.nav-link').forEach(link => {
     link.addEventListener('click', function(e) {
@@ -466,23 +636,19 @@ const db = window.db || {};
       document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
       this.classList.add('active');
 
-      // Cargar usuarios si se abre Configuración
       if (sectionId === 'configuracion') {
         setTimeout(() => cargarUsuarios(), 100);
       }
     });
   });
 
-  // Cargar datos iniciales
-  window.addEventListener('DOMContentLoaded', async () => {
-    await testConnection();
-    await cargarDatos();
-  });
+  window.addEventListener('DOMContentLoaded', verificarSesion);
 
   async function cargarDatos() {
     // Cargar clientes
     const clientes = await restaurante.cargarClientes();
     const selectClientes = document.getElementById('venta-cliente');
+    selectClientes.innerHTML = '<option value="">-- Seleccionar Cliente --</option>';
     clientes.forEach(c => {
       const option = document.createElement('option');
       option.value = c.id_cliente;
@@ -490,10 +656,30 @@ const db = window.db || {};
       selectClientes.appendChild(option);
     });
 
+    // Tabla de clientes
+    const tablaClientes = document.getElementById('tabla-clientes').querySelector('tbody');
+    tablaClientes.innerHTML = '';
+    clientes.forEach(c => {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td>${c.nombre}</td>
+        <td>${c.telefono || '-'}</td>
+        <td>${c.email || '-'}</td>
+        <td>${restaurante.formatearFecha(c.fecha_registro)}</td>
+        <td>
+          <button class="btn btn-small btn-info" onclick="editarCliente(${c.id_cliente})">Editar</button>
+          <button class="btn btn-small btn-danger" onclick="eliminarCliente(${c.id_cliente})">Eliminar</button>
+        </td>
+      `;
+      tablaClientes.appendChild(tr);
+    });
+
     // Cargar mesas
     const mesas = await restaurante.cargarMesas();
     const selectMesas = document.getElementById('venta-mesa');
     const gridMesas = document.getElementById('grid-mesas');
+    
+    selectMesas.innerHTML = '<option value="">-- Seleccionar Mesa --</option>';
     gridMesas.innerHTML = '';
     
     mesas.forEach(mesa => {
@@ -506,11 +692,13 @@ const db = window.db || {};
       card.className = 'card';
       card.style.textAlign = 'center';
       card.style.cursor = 'pointer';
+      const disponible = mesa.estado === 'disponible';
+      card.style.opacity = disponible ? '1' : '0.6';
       card.innerHTML = `
-        <div style="font-size: 2rem;">🪑</div>
+        <div style="font-size: 2rem;">${disponible ? '🪑' : '🔴'}</div>
         <div style="font-weight: bold;">Mesa ${mesa.numero_mesa}</div>
-        <div style="font-size: 0.9rem; color: #999;">Cap: ${mesa.capacidad} personas</div>
-        <div class="badge ${mesa.estado === 'disponible' ? 'badge-success' : 'badge-warning'}" style="margin-top: 0.5rem;">
+        <div style="font-size: 0.9rem; color: #999;">Cap: ${mesa.capacidad}</div>
+        <div class="badge ${disponible ? 'badge-success' : 'badge-warning'}" style="margin-top: 0.5rem;">
           ${mesa.estado}
         </div>
       `;
@@ -521,6 +709,8 @@ const db = window.db || {};
     const empleados = await restaurante.cargarEmpleados();
     const selectEmpleados = document.getElementById('venta-empleado');
     const tablaEmpleados = document.getElementById('tabla-empleados').querySelector('tbody');
+    
+    selectEmpleados.innerHTML = '<option value="">-- Seleccionar Empleado --</option>';
     tablaEmpleados.innerHTML = '';
     
     empleados.forEach(emp => {
@@ -542,6 +732,7 @@ const db = window.db || {};
     // Cargar categorías
     const categorias = await restaurante.cargarCategorias();
     const selectCategorias = document.getElementById('prod-categoria');
+    selectCategorias.innerHTML = '<option value="">-- Seleccionar Categoría --</option>';
     categorias.forEach(cat => {
       const option = document.createElement('option');
       option.value = cat.id_categoria;
@@ -563,22 +754,29 @@ const db = window.db || {};
         <td>${prod.descripcion || '-'}</td>
         <td><span class="badge badge-success">Activo</span></td>
         <td>
-          <button class="btn btn-small btn-info">Editar</button>
-          <button class="btn btn-small btn-danger">Eliminar</button>
+          <button class="btn btn-small btn-info" onclick="editarProducto(${prod.id_producto})">Editar</button>
+          <button class="btn btn-small btn-danger" onclick="eliminarProducto(${prod.id_producto})">Eliminar</button>
         </td>
       `;
       tablaProductos.appendChild(tr);
     });
 
-    // Cargar ventas
+    // Cargar selector de productos para ventas
+    await cargarProductosEnSelector();
+
+    // Cargar ventas (filtrar si vendedor)
     const ventas = await restaurante.cargarVentas();
+    const ventasFiltrads = usuarioActual.rol === 'vendedora' 
+      ? ventas.filter(v => v.empleados?.nombre === usuarioActual.nombre)
+      : ventas;
+
     const tablaVentas = document.getElementById('tabla-ventas').querySelector('tbody');
     const tablaUltimas = document.getElementById('tabla-ultimas-ventas').querySelector('tbody');
     
     tablaVentas.innerHTML = '';
     tablaUltimas.innerHTML = '';
     
-    ventas.slice(0, 5).forEach(venta => {
+    ventasFiltrads.forEach(venta => {
       const tr = document.createElement('tr');
       tr.innerHTML = `
         <td>#${venta.id_venta}</td>
@@ -596,7 +794,7 @@ const db = window.db || {};
       }
     });
 
-    // Dashboard stats
+    // Dashboard
     const reporteHoy = await restaurante.obtenerReporteDiario(new Date().toISOString().split('T')[0]);
     document.getElementById('stat-ventas-hoy').textContent = reporteHoy.cantidad;
     document.getElementById('stat-total-hoy').textContent = restaurante.formatearDinero(reporteHoy.total);
@@ -605,32 +803,30 @@ const db = window.db || {};
     const ocupadas = mesas.filter(m => m.estado === 'ocupada').length;
     document.getElementById('stat-mesas').textContent = `${ocupadas}/${mesas.length}`;
 
-    // Top productos
-    const topProductos = await restaurante.obtenerProductosMasVendidos(7);
-    const tablaTop = document.getElementById('tabla-top-productos').querySelector('tbody');
-    tablaTop.innerHTML = '';
-    topProductos.slice(0, 5).forEach(prod => {
-      const tr = document.createElement('tr');
-      tr.innerHTML = `
-        <td>${prod.nombre}</td>
-        <td>${prod.cantidad}</td>
-        <td>${restaurante.formatearDinero(prod.ingresos)}</td>
-      `;
-      tablaTop.appendChild(tr);
-    });
+    if (usuarioActual.rol === 'admin') {
+      const topProductos = await restaurante.obtenerProductosMasVendidos(7);
+      const tablaTop = document.getElementById('tabla-top-productos').querySelector('tbody');
+      tablaTop.innerHTML = '';
+      topProductos.slice(0, 5).forEach(prod => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${prod.nombre}</td>
+          <td>${prod.cantidad}</td>
+          <td>${restaurante.formatearDinero(prod.ingresos)}</td>
+        `;
+        tablaTop.appendChild(tr);
+      });
+    }
   }
 
   async function testConnection() {
     try {
       const result = await window.supabaseClient.from(window.db.productos).select('*').limit(1);
-      const status = document.getElementById('connection-status');
       const configStatus = document.getElementById('config-db-status');
       
       if (result.error) {
-        status.innerHTML = '❌ Error de conexión';
         configStatus.textContent = '❌ Desconectada';
       } else {
-        status.innerHTML = '✅ Conectado a Supabase';
         configStatus.textContent = '✅ Conectada';
       }
     } catch (err) {
@@ -663,9 +859,6 @@ const db = window.db || {};
           <div class="stat-label">Promedio</div>
         </div>
       </div>
-      <p style="margin-top: 1rem; text-align: center; color: #999;">
-        Reporte generado para ${fecha}
-      </p>
     `;
   }
 
@@ -723,7 +916,81 @@ const db = window.db || {};
     }
   }
 
-  // Formularios
+  // ===== CARRITO DE VENTAS =====
+  
+  function agregarProductoAlCarrito() {
+    const selector = document.getElementById('venta-selector-producto');
+    const selectedOption = selector.selectedOptions[0];
+    
+    if (!selectedOption || !selectedOption.dataset.id) {
+      alert('❌ Selecciona un producto');
+      return;
+    }
+
+    const producto = {
+      id_producto: parseInt(selectedOption.dataset.id),
+      nombre_producto: selectedOption.text,
+      precio: parseFloat(selectedOption.dataset.precio)
+    };
+
+    restaurante.agregarAlCarrito(producto);
+    selector.value = '';
+  }
+
+  // Cargar productos en el selector
+  async function cargarProductosEnSelector() {
+    const productos = await restaurante.cargarProductos();
+    const selector = document.getElementById('venta-selector-producto');
+    selector.innerHTML = '<option value="">-- Seleccionar Producto --</option>';
+    
+    productos.forEach(prod => {
+      const option = document.createElement('option');
+      option.value = prod.id_producto;
+      option.text = `${prod.nombre_producto} - ${restaurante.formatearDinero(prod.precio)}`;
+      option.dataset.id = prod.id_producto;
+      option.dataset.precio = prod.precio;
+      selector.appendChild(option);
+    });
+  }
+
+  // Formulario de Ventas
+  document.getElementById('form-venta').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    const venta = {
+      id_cliente: document.getElementById('venta-cliente').value || null,
+      id_mesa: document.getElementById('venta-mesa').value || null,
+      id_empleado: parseInt(document.getElementById('venta-empleado').value),
+      id_metodo_pago: parseInt(document.getElementById('venta-metodo').value)
+    };
+
+    if (!venta.id_empleado || !venta.id_metodo_pago) {
+      alert('❌ Selecciona empleado y método de pago');
+      return;
+    }
+
+    if (restaurante.carrito.length === 0) {
+      alert('❌ Agrega al menos un producto al carrito');
+      return;
+    }
+
+    const detalles = restaurante.carrito.map(item => ({
+      id_producto: item.id_producto,
+      cantidad: item.cantidad,
+      precio_unitario: item.precio
+    }));
+
+    const result = await restaurante.crearVenta(venta, detalles);
+    if (result) {
+      alert('✅ Venta registrada exitosamente');
+      e.target.reset();
+      restaurante.carrito = [];
+      restaurante.actualizarCarrito();
+      cargarDatos();
+    }
+  });
+
+  // Formularios - Clientes
   document.getElementById('form-cliente').addEventListener('submit', async (e) => {
     e.preventDefault();
     const formData = new FormData(e.target);
@@ -737,6 +1004,7 @@ const db = window.db || {};
     }
   });
 
+  // Formulario - Productos
   document.getElementById('form-producto').addEventListener('submit', async (e) => {
     e.preventDefault();
     const formData = new FormData(e.target);
@@ -751,7 +1019,7 @@ const db = window.db || {};
     
     const errors = restaurante.validarProducto(producto);
     if (errors.length > 0) {
-      alert('❌ Errores:\\n' + errors.join('\\n'));
+      alert('❌ Errores:\n' + errors.join('\n'));
       return;
     }
     
@@ -759,9 +1027,75 @@ const db = window.db || {};
     if (result) {
       alert('✅ Producto agregado exitosamente');
       e.target.reset();
+      cargarProductosEnSelector();
       location.reload();
     }
   });
+
+  // ===== FUNCIONES DE EDITAR =====
+
+  async function editarCliente(idCliente) {
+    const clientes = await restaurante.cargarClientes();
+    const cliente = clientes.find(c => c.id_cliente === idCliente);
+    
+    if (!cliente) return;
+
+    const nombre = prompt('Nombre:', cliente.nombre);
+    if (nombre === null) return;
+
+    const telefono = prompt('Teléfono:', cliente.telefono || '');
+    const email = prompt('Email:', cliente.email || '');
+
+    const result = await restaurante.actualizarCliente(idCliente, { nombre, telefono, email });
+    if (result) {
+      alert('✅ Cliente actualizado');
+      location.reload();
+    }
+  }
+
+  async function eliminarCliente(idCliente) {
+    if (!confirm('¿Eliminar este cliente?')) return;
+    const result = await restaurante.eliminarCliente(idCliente);
+    if (result) {
+      alert('✅ Cliente eliminado');
+      location.reload();
+    }
+  }
+
+  async function editarProducto(idProducto) {
+    const productos = await restaurante.cargarProductos();
+    const producto = productos.find(p => p.id_producto === idProducto);
+    
+    if (!producto) return;
+
+    const nombre = prompt('Nombre:', producto.nombre_producto);
+    if (nombre === null) return;
+
+    const precio = prompt('Precio:', producto.precio);
+    if (precio === null) return;
+
+    const descripcion = prompt('Descripción:', producto.descripcion || '');
+
+    const result = await restaurante.actualizarProducto(idProducto, {
+      nombre_producto: nombre,
+      id_categoria: producto.categorias.id_categoria,
+      precio: parseFloat(precio),
+      descripcion: descripcion
+    });
+    if (result) {
+      alert('✅ Producto actualizado');
+      location.reload();
+    }
+  }
+
+  async function eliminarProducto(idProducto) {
+    if (!confirm('¿Eliminar este producto?')) return;
+    const result = await restaurante.eliminarProducto(idProducto);
+    if (result) {
+      alert('✅ Producto eliminado');
+      location.reload();
+    }
+  }
 </script>
 </body>
 </html>

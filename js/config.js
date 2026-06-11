@@ -8,6 +8,9 @@
 const SUPABASE_URL = 'https://vuxuwgwhbseyhhiypcrg.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_rRvknKmMBSccHt-iTib87g_ObEaa2UR';
 
+const { createClient } = window.supabase;
+const supabaseClient = createClient(SUPABASE_URL, SUPABASE_KEY);
+
 // Verificar que Supabase esté disponible
 if (!window.supabase) {
   console.error('❌ Supabase no se cargó. Verifica que el CDN está accesible.');

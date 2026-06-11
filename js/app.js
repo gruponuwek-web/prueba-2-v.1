@@ -1,28 +1,35 @@
 // ========================================
 // APP.JS - SISTEMA DE GESTIÓN RESTAURANTE
-// Compatible con index.html
+// Compatible con index.html - SIN conflictos
 // ========================================
 
-// Objeto global restaurante
-const restaurante = {
+// Esperar a que config.js esté listo
+if (!window.config) {
+  console.error('❌ config.js no cargó. Revisa el orden de los scripts.');
+}
+
+// Crear objeto global restaurante (SIN redeclarar db)
+window.restaurante = {
   // ========================================
   // PROPIEDADES
   // ========================================
   
-  db: {
-    productos: 'productos',
-    categorias: 'categorias',
-    clientes: 'clientes',
-    mesas: 'mesas',
-    empleados: 'empleados',
-    metodos_pago: 'metodos_pago',
-    ventas: 'ventas',
-    detalle_ventas: 'detalle_ventas',
-    usuarios: 'usuarios'
-  },
-
   get client() {
     return window.config?.supabaseClient || null;
+  },
+
+  get dbTables() {
+    return {
+      productos: 'productos',
+      categorias: 'categorias',
+      clientes: 'clientes',
+      mesas: 'mesas',
+      empleados: 'empleados',
+      metodos_pago: 'metodos_pago',
+      ventas: 'ventas',
+      detalle_ventas: 'detalle_ventas',
+      usuarios: 'usuarios'
+    };
   },
 
   // ========================================
@@ -37,6 +44,7 @@ const restaurante = {
   },
 
   formatearFecha(fecha) {
+    if (!fecha) return '-';
     return new Date(fecha).toLocaleDateString('es-MX', {
       year: 'numeric',
       month: '2-digit',
@@ -45,6 +53,7 @@ const restaurante = {
   },
 
   formatearHora(fecha) {
+    if (!fecha) return '-';
     return new Date(fecha).toLocaleTimeString('es-MX');
   },
 
@@ -54,23 +63,28 @@ const restaurante = {
 
   async cargarClientes() {
     try {
+      if (!this.client) throw new Error('Cliente Supabase no disponible');
+      
       const { data, error } = await this.client
-        .from(this.db.clientes)
+        .from('clientes')
         .select('*')
         .order('nombre');
       
       if (error) throw error;
+      
       return data || [];
     } catch (err) {
-      console.error('Error cargando clientes:', err);
+      console.error('❌ Error cargando clientes:', err);
       return [];
     }
   },
 
   async crearCliente(cliente) {
     try {
+      if (!this.client) throw new Error('Cliente Supabase no disponible');
+      
       const { data, error } = await this.client
-        .from(this.db.clientes)
+        .from('clientes')
         .insert({
           nombre: cliente.nombre,
           telefono: cliente.telefono || null,
@@ -82,7 +96,7 @@ const restaurante = {
       console.log('✅ Cliente creado:', data);
       return data;
     } catch (err) {
-      console.error('Error creando cliente:', err);
+      console.error('❌ Error creando cliente:', err);
       alert('❌ Error: ' + err.message);
       return null;
     }
@@ -94,21 +108,24 @@ const restaurante = {
 
   async cargarMesas() {
     try {
+      if (!this.client) throw new Error('Cliente Supabase no disponible');
+      
       const { data, error } = await this.client
-        .from(this.db.mesas)
+        .from('mesas')
         .select('*')
         .order('numero');
       
       if (error) throw error;
       
-      return data?.map(m => ({
+      // Mapear a formato esperado por HTML
+      return (data || []).map(m => ({
         id_mesa: m.id,
-        numero_mesa: m.numero,
+        numero_mesa: m.numero || m.numero_mesa,
         capacidad: m.capacidad,
         estado: m.estado
-      })) || [];
+      }));
     } catch (err) {
-      console.error('Error cargando mesas:', err);
+      console.error('❌ Error cargando mesas:', err);
       return [];
     }
   },
@@ -119,21 +136,23 @@ const restaurante = {
 
   async cargarEmpleados() {
     try {
+      if (!this.client) throw new Error('Cliente Supabase no disponible');
+      
       const { data, error } = await this.client
-        .from(this.db.empleados)
+        .from('empleados')
         .select('*')
         .order('nombre');
       
       if (error) throw error;
       
-      return data?.map(e => ({
+      return (data || []).map(e => ({
         id_empleado: e.id,
         nombre: e.nombre,
-        puesto: e.puesto,
+        puesto: e.puesto || '-',
         telefono: e.telefono || '-'
-      })) || [];
+      }));
     } catch (err) {
-      console.error('Error cargando empleados:', err);
+      console.error('❌ Error cargando empleados:', err);
       return [];
     }
   },
@@ -144,19 +163,21 @@ const restaurante = {
 
   async cargarCategorias() {
     try {
+      if (!this.client) throw new Error('Cliente Supabase no disponible');
+      
       const { data, error } = await this.client
-        .from(this.db.categorias)
+        .from('categorias')
         .select('*')
         .order('nombre_categoria');
       
       if (error) throw error;
       
-      return data?.map(c => ({
-        id_categoria: c.id,
-        nombre_categoria: c.nombre_categoria
-      })) || [];
+      return (data || []).map(c => ({
+        id_categoria: c.id || c.id_categoria,
+        nombre_categoria: c.nombre_categoria || c.nombre
+      }));
     } catch (err) {
-      console.error('Error cargando categorías:', err);
+      console.error('❌ Error cargando categorías:', err);
       return [];
     }
   },
@@ -167,33 +188,37 @@ const restaurante = {
 
   async cargarProductos() {
     try {
+      if (!this.client) throw new Error('Cliente Supabase no disponible');
+      
       const { data, error } = await this.client
-        .from(this.db.productos)
-        .select('*, categorias(id, nombre_categoria)')
+        .from('productos')
+        .select('*, categorias(id, nombre_categoria, nombre)')
         .order('nombre');
       
       if (error) throw error;
       
-      return data?.map(p => ({
+      return (data || []).map(p => ({
         id_producto: p.id,
         nombre_producto: p.nombre,
         precio: p.precio,
         descripcion: p.descripcion,
         categorias: {
           id_categoria: p.categorias?.id,
-          nombre_categoria: p.categorias?.nombre_categoria
+          nombre_categoria: p.categorias?.nombre_categoria || p.categorias?.nombre
         }
-      })) || [];
+      }));
     } catch (err) {
-      console.error('Error cargando productos:', err);
+      console.error('❌ Error cargando productos:', err);
       return [];
     }
   },
 
   async crearProducto(producto) {
     try {
+      if (!this.client) throw new Error('Cliente Supabase no disponible');
+      
       const { data, error } = await this.client
-        .from(this.db.productos)
+        .from('productos')
         .insert({
           nombre: producto.nombre_producto,
           categoria_id: producto.id_categoria,
@@ -205,7 +230,7 @@ const restaurante = {
       console.log('✅ Producto creado:', data);
       return data;
     } catch (err) {
-      console.error('Error creando producto:', err);
+      console.error('❌ Error creando producto:', err);
       alert('❌ Error: ' + err.message);
       return null;
     }
@@ -225,10 +250,14 @@ const restaurante = {
 
   async cargarVentas() {
     try {
+      if (!this.client) throw new Error('Cliente Supabase no disponible');
+      
       const { data, error } = await this.client
-        .from(this.db.ventas)
+        .from('ventas')
         .select(`
-          *,
+          id,
+          fecha_venta,
+          monto,
           clientes(id, nombre),
           mesas(id, numero),
           empleados(id, nombre),
@@ -238,17 +267,17 @@ const restaurante = {
       
       if (error) throw error;
       
-      return data?.map(v => ({
+      return (data || []).map(v => ({
         id_venta: v.id,
         fecha_venta: v.fecha_venta,
         total: v.monto,
-        clientes: { nombre: v.clientes?.nombre },
-        mesas: { numero_mesa: v.mesas?.numero },
-        empleados: { nombre: v.empleados?.nombre },
-        metodos_pago: { nombre_metodo: v.metodos_pago?.nombre }
-      })) || [];
+        clientes: { nombre: v.clientes?.nombre || 'Mostrador' },
+        mesas: { numero_mesa: v.mesas?.numero || '-' },
+        empleados: { nombre: v.empleados?.nombre || '-' },
+        metodos_pago: { nombre_metodo: v.metodos_pago?.nombre || '-' }
+      }));
     } catch (err) {
-      console.error('Error cargando ventas:', err);
+      console.error('❌ Error cargando ventas:', err);
       return [];
     }
   },
@@ -259,11 +288,13 @@ const restaurante = {
 
   async obtenerReporteDiario(fecha) {
     try {
+      if (!this.client) throw new Error('Cliente Supabase no disponible');
+      
       const fechaInicio = fecha + 'T00:00:00';
       const fechaFin = fecha + 'T23:59:59';
 
       const { data, error } = await this.client
-        .from(this.db.ventas)
+        .from('ventas')
         .select('monto')
         .gte('fecha_venta', fechaInicio)
         .lte('fecha_venta', fechaFin);
@@ -275,6 +306,8 @@ const restaurante = {
       const total = ventas.reduce((sum, v) => sum + (v.monto || 0), 0);
       const promedio = cantidad > 0 ? total / cantidad : 0;
 
+      console.log(`✅ Reporte ${fecha}: ${cantidad} ventas, total $${total}`);
+      
       return {
         fecha,
         cantidad,
@@ -282,19 +315,21 @@ const restaurante = {
         promedio
       };
     } catch (err) {
-      console.error('Error obteniendo reporte diario:', err);
+      console.error('❌ Error obteniendo reporte diario:', err);
       return { fecha, cantidad: 0, total: 0, promedio: 0 };
     }
   },
 
   async obtenerProductosMasVendidos(dias = 7) {
     try {
+      if (!this.client) throw new Error('Cliente Supabase no disponible');
+      
       const fechaInicio = new Date();
       fechaInicio.setDate(fechaInicio.getDate() - dias);
       const fechaIso = fechaInicio.toISOString();
 
       const { data, error } = await this.client
-        .from(this.db.detalle_ventas)
+        .from('detalle_ventas')
         .select(`
           cantidad,
           precio_unitario,
@@ -315,22 +350,23 @@ const restaurante = {
         agrupado[nombre].ingresos += (item.cantidad || 0) * (item.precio_unitario || 0);
       });
 
-      return Object.values(agrupado).sort((a, b) => b.ingresos - a.ingresos);
+      const resultado = Object.values(agrupado).sort((a, b) => b.ingresos - a.ingresos);
+      console.log(`✅ Top ${dias} días: ${resultado.length} productos`);
+      
+      return resultado;
     } catch (err) {
-      console.error('Error obteniendo productos más vendidos:', err);
+      console.error('❌ Error obteniendo productos más vendidos:', err);
       return [];
     }
   }
 };
 
 // ========================================
-// Alias global para compatibilidad
+// Crear alias global (si app.js lo necesita)
 // ========================================
-const db = restaurante.db;
-const supabaseClient = window.config?.supabaseClient;
+if (typeof restaurante === 'undefined') {
+  window.restaurante = window.restaurante;
+}
 
-// ========================================
-// Log de inicialización
-// ========================================
 console.log('✅ app.js cargado correctamente');
-console.log('✅ Objeto restaurante disponible');
+console.log('✅ Objeto restaurante disponible en window.restaurante');

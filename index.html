@@ -366,7 +366,7 @@
         <div class="card" style="margin-top: 2rem;">
           <div class="card-header">Historial de Ventas</div>
           <div class="card-body">
-            <table id="tabla-ventas">
+            <table id="tabla-ventas" style="width: 100%; font-size: 0.85rem;">
               <thead>
                 <tr>
                   <th>ID Venta</th>
@@ -376,11 +376,12 @@
                   <th>Total</th>
                   <th>Método de Pago</th>
                   <th>Estado</th>
+                  <th style="text-align: center;">Acciones</th>
                 </tr>
               </thead>
               <tbody>
                 <tr>
-                  <td colspan="7" style="text-align: center; padding: 2rem; color: #999;">Cargando ventas...</td>
+                  <td colspan="8" style="text-align: center; padding: 2rem; color: #999;">Cargando ventas...</td>
                 </tr>
               </tbody>
             </table>
@@ -980,11 +981,16 @@
         <td>${restaurante.formatearDinero(venta.total)}</td>
         <td>${venta.metodos_pago?.nombre_metodo || '-'}</td>
         <td><span class="badge badge-success">Pagada</span></td>
+        <td style="text-align: center;">
+          <button class="btn btn-small btn-info" onclick="window.editarVenta(${venta.id_venta})" title="Editar">✏️ Editar</button>
+          <button class="btn btn-small btn-danger" onclick="window.eliminarVenta(${venta.id_venta})" title="Eliminar" style="margin-left: 0.3rem;">🗑️ Eliminar</button>
+        </td>
       `;
       tablaVentas.appendChild(tr);
       
+      const trUltimas = tr.cloneNode(true);
       if (tablaUltimas.children.length < 5) {
-        tablaUltimas.appendChild(tr.cloneNode(true));
+        tablaUltimas.appendChild(trUltimas);
       }
     });
 
@@ -1094,6 +1100,66 @@
     if (result) {
       alert('✅ Usuario eliminado');
       await window.cargarUsuarios();
+    }
+  }
+
+  // ===== EDITAR VENTAS =====
+
+  window.editarVenta = async function(idVenta) {
+    const ventas = await restaurante.cargarVentas();
+    const venta = ventas.find(v => v.id_venta === idVenta);
+    
+    if (!venta) {
+      alert('❌ Venta no encontrada');
+      return;
+    }
+
+    if (!confirm(`¿Editar Venta #${idVenta}?`)) return;
+
+    const clientes = await restaurante.cargarClientes();
+    const mesas = await restaurante.cargarMesas();
+
+    // Crear opciones de clientes
+    let clienteOptions = '0:Mostrador\n';
+    clientes.forEach(c => {
+      clienteOptions += `${c.id_cliente}:${c.nombre}\n`;
+    });
+
+    // Crear opciones de mesas
+    let mesaOptions = '0:Ninguna\n';
+    mesas.forEach(m => {
+      mesaOptions += `${m.id_mesa}:Mesa ${m.numero_mesa}\n`;
+    });
+
+    const nuevoCliente = prompt('Selecciona cliente (ID:Nombre):\n' + clienteOptions, venta.clientes?.nombre || 'Mostrador');
+    if (nuevoCliente === null) return;
+
+    const nuevaMesa = prompt('Selecciona mesa (ID:Nombre):\n' + mesaOptions, venta.mesas?.numero_mesa || '0');
+    if (nuevaMesa === null) return;
+
+    const idClienteNum = nuevoCliente === 'Mostrador' || nuevoCliente === '0' ? null : parseInt(nuevoCliente);
+    const idMesaNum = nuevaMesa === 'Ninguna' || nuevaMesa === '0' ? null : parseInt(nuevaMesa);
+
+    const ventaActualizada = {
+      id_cliente: idClienteNum,
+      id_mesa: idMesaNum,
+      id_empleado: 1, // Mantener igual
+      id_metodo_pago: 1 // Mantener igual
+    };
+
+    const result = await restaurante.actualizarVenta(idVenta, ventaActualizada);
+    if (result) {
+      alert('✅ Venta actualizada correctamente');
+      cargarDatos();
+    }
+  }
+
+  window.eliminarVenta = async function(idVenta) {
+    if (!confirm('⚠️ Esto eliminará la venta y todos sus productos. ¿Confirmar?')) return;
+    const result = await restaurante.eliminarVenta(idVenta);
+    if (result) {
+      alert('✅ Venta eliminada');
+      cargarDatos();
     }
   }
 

@@ -203,7 +203,6 @@ window.restaurante = {
         .select('cantidad, precio_unitario, productos(nombre_producto), ventas(fecha_venta)');
       if (error) throw error;
       
-      // Filtrar por fecha
       const filtered = (data || []).filter(item => {
         const venta_fecha = new Date(item.ventas?.fecha_venta || '');
         return venta_fecha >= fechaInicio;
@@ -221,8 +220,10 @@ window.restaurante = {
       console.error('❌ Error:', err);
       return [];
     }
-  }
+  },
 
+  // ===== USUARIOS =====
+  
   async cargarUsuarios() {
     try {
       const { data, error } = await window.supabaseClient
@@ -284,5 +285,3 @@ window.restaurante = {
 };
 
 console.log('✅ app.js cargado correctamente');
-
-  

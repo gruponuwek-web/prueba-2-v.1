@@ -405,6 +405,53 @@ window.restaurante = {
     }
   },
 
+  async actualizarVenta(idVenta, venta) {
+    try {
+      const { data, error } = await window.supabaseClient
+        .from('ventas')
+        .update({
+          id_cliente: venta.id_cliente || null,
+          id_mesa: venta.id_mesa || null,
+          id_empleado: venta.id_empleado,
+          id_metodo_pago: venta.id_metodo_pago
+        })
+        .eq('id_venta', idVenta);
+      if (error) throw error;
+      console.log('✅ Venta actualizada');
+      return true;
+    } catch (err) {
+      console.error('❌ Error:', err);
+      alert('❌ Error: ' + err.message);
+      return false;
+    }
+  },
+
+  async eliminarVenta(idVenta) {
+    try {
+      // Primero eliminar detalles
+      const { error: detalleError } = await window.supabaseClient
+        .from('detalle_ventas')
+        .delete()
+        .eq('id_venta', idVenta);
+      
+      if (detalleError) throw detalleError;
+
+      // Luego eliminar venta
+      const { error } = await window.supabaseClient
+        .from('ventas')
+        .delete()
+        .eq('id_venta', idVenta);
+      
+      if (error) throw error;
+      console.log('✅ Venta eliminada');
+      return true;
+    } catch (err) {
+      console.error('❌ Error:', err);
+      alert('❌ Error: ' + err.message);
+      return false;
+    }
+  },
+
   async obtenerProductosMasVendidos(dias = 7) {
     try {
       const fechaInicio = new Date();

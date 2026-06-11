@@ -95,7 +95,7 @@
       <button type="submit">Iniciar Sesión</button>
     </form>
     <p style="text-align: center; margin-top: 1rem; color: #999; font-size: 0.9rem;">
-      Demo: admin / admin123 o vendedor / vendedor123
+      Ingresa tu usuario y contraseña (Admin demo: admin/admin123)
     </p>
   </div>
 </div>
@@ -557,33 +557,64 @@
 <script src="js/config.js"></script>
 <script src="js/app.js"></script>
 <script>
-  // ===== AUTENTICACIÓN =====
+  // ===== AUTENTICACIÓN (desde Supabase) =====
   
   let usuarioActual = null;
 
-  function hacerLogin(event) {
+  async function hacerLogin(event) {
     event.preventDefault();
-    const usuario = document.getElementById('login-usuario').value;
+    const usuario = document.getElementById('login-usuario').value.trim();
     const password = document.getElementById('login-password').value;
     
-    // Demo users (en producción, validar contra Supabase)
-    const usuariosDemo = {
-      'admin': { password: 'admin123', rol: 'admin', nombre: 'Administrador' },
-      'vendedor': { password: 'vendedor123', rol: 'vendedora', nombre: 'Vendedor' }
-    };
-
-    if (usuariosDemo[usuario] && usuariosDemo[usuario].password === password) {
-      usuarioActual = {
-        nombre_usuario: usuario,
-        rol: usuariosDemo[usuario].rol,
-        nombre: usuariosDemo[usuario].nombre
-      };
-      localStorage.setItem('usuarioActual', JSON.stringify(usuarioActual));
-      mostrarApp();
-    } else {
+    if (!usuario || !password) {
       const error = document.getElementById('login-error');
-      error.textContent = '❌ Usuario o contraseña incorrectos';
+      error.textContent = '❌ Completa usuario y contraseña';
       error.style.display = 'block';
+      return;
+    }
+
+    try {
+      // Buscar usuario en Supabase
+      const { data, error } = await window.supabaseClient
+        .from('usuarios')
+        .select('*')
+        .eq('nombre_usuario', usuario)
+        .eq('activo', true);
+
+      if (error || !data || data.length === 0) {
+        const errorDiv = document.getElementById('login-error');
+        errorDiv.textContent = '❌ Usuario no encontrado o inactivo';
+        errorDiv.style.display = 'block';
+        return;
+      }
+
+      const usuarioDb = data[0];
+
+      // Validar contraseña (comparación simple - en producción usar bcrypt)
+      if (usuarioDb.password !== password) {
+        const errorDiv = document.getElementById('login-error');
+        errorDiv.textContent = '❌ Contraseña incorrecta';
+        errorDiv.style.display = 'block';
+        return;
+      }
+
+      // Login exitoso
+      usuarioActual = {
+        id_usuario: usuarioDb.id_usuario,
+        nombre_usuario: usuarioDb.nombre_usuario,
+        email: usuarioDb.email,
+        rol: usuarioDb.rol,
+        nombre: usuarioDb.nombre_usuario
+      };
+
+      localStorage.setItem('usuarioActual', JSON.stringify(usuarioActual));
+      document.getElementById('login-error').style.display = 'none';
+      mostrarApp();
+    } catch (err) {
+      console.error('Error:', err);
+      const errorDiv = document.getElementById('login-error');
+      errorDiv.textContent = '❌ Error al conectar. Intenta de nuevo.';
+      errorDiv.style.display = 'block';
     }
   }
 
@@ -637,7 +668,7 @@
       this.classList.add('active');
 
       if (sectionId === 'configuracion') {
-        setTimeout(() => cargarUsuarios(), 100);
+        setTimeout(() => window.cargarUsuarios(), 100);
       }
     });
   });
@@ -762,7 +793,7 @@
     });
 
     // Cargar selector de productos para ventas
-    await cargarProductosEnSelector();
+    await window.cargarProductosEnSelector();
 
     // Cargar ventas (filtrar si vendedor)
     const ventas = await restaurante.cargarVentas();
@@ -864,7 +895,7 @@
 
   // ===== USUARIOS =====
   
-  async function cargarUsuarios() {
+  window.cargarUsuarios = async function() {
     try {
       const usuarios = await restaurante.cargarUsuarios();
       const tabla = document.getElementById('tabla-usuarios').querySelector('tbody');
@@ -879,14 +910,27 @@
           <td><span class="badge ${usr.activo ? 'badge-success' : 'badge-warning'}">${usr.activo ? 'Activo' : 'Inactivo'}</span></td>
           <td>${restaurante.formatearFecha(usr.fecha_creacion)}</td>
           <td>
-            <button class="btn btn-small btn-info" onclick="editarUsuario(${usr.id_usuario})">Editar</button>
-            <button class="btn btn-small btn-danger" onclick="eliminarUsuario(${usr.id_usuario})">Eliminar</button>
+            <button class="btn btn-small btn-info" onclick="window.editarUsuario(${usr.id_usuario})">Editar</button>
+            <button class="btn btn-small btn-danger" onclick="window.eliminarUsuario(${usr.id_usuario})">Eliminar</button>
           </td>
         `;
         tabla.appendChild(tr);
       });
     } catch (err) {
       console.error('Error cargando usuarios:', err);
+    }
+  }
+
+  window.editarUsuario = async function(id) {
+    alert('Función en desarrollo');
+  }
+
+  window.eliminarUsuario = async function(id) {
+    if (!confirm('¿Eliminar este usuario?')) return;
+    const result = await restaurante.eliminarUsuario(id);
+    if (result) {
+      alert('✅ Usuario eliminado');
+      await window.cargarUsuarios();
     }
   }
 
@@ -899,26 +943,13 @@
     if (result) {
       alert('✅ Usuario creado exitosamente');
       e.target.reset();
-      await cargarUsuarios();
+      await window.cargarUsuarios();
     }
   });
 
-  async function editarUsuario(id) {
-    alert('Función en desarrollo');
-  }
-
-  async function eliminarUsuario(id) {
-    if (!confirm('¿Eliminar este usuario?')) return;
-    const result = await restaurante.eliminarUsuario(id);
-    if (result) {
-      alert('✅ Usuario eliminado');
-      await cargarUsuarios();
-    }
-  }
-
   // ===== CARRITO DE VENTAS =====
   
-  function agregarProductoAlCarrito() {
+  window.agregarProductoAlCarrito = function() {
     const selector = document.getElementById('venta-selector-producto');
     const selectedOption = selector.selectedOptions[0];
     
@@ -929,16 +960,17 @@
 
     const producto = {
       id_producto: parseInt(selectedOption.dataset.id),
-      nombre_producto: selectedOption.text,
+      nombre_producto: selectedOption.text.split(' - ')[0].trim(),
       precio: parseFloat(selectedOption.dataset.precio)
     };
 
     restaurante.agregarAlCarrito(producto);
     selector.value = '';
+    console.log('✅ Producto agregado:', producto);
   }
 
   // Cargar productos en el selector
-  async function cargarProductosEnSelector() {
+  window.cargarProductosEnSelector = async function() {
     const productos = await restaurante.cargarProductos();
     const selector = document.getElementById('venta-selector-producto');
     selector.innerHTML = '<option value="">-- Seleccionar Producto --</option>';
@@ -1034,7 +1066,7 @@
 
   // ===== FUNCIONES DE EDITAR =====
 
-  async function editarCliente(idCliente) {
+  window.editarCliente = async function(idCliente) {
     const clientes = await restaurante.cargarClientes();
     const cliente = clientes.find(c => c.id_cliente === idCliente);
     
@@ -1049,20 +1081,20 @@
     const result = await restaurante.actualizarCliente(idCliente, { nombre, telefono, email });
     if (result) {
       alert('✅ Cliente actualizado');
-      location.reload();
+      cargarDatos();
     }
   }
 
-  async function eliminarCliente(idCliente) {
+  window.eliminarCliente = async function(idCliente) {
     if (!confirm('¿Eliminar este cliente?')) return;
     const result = await restaurante.eliminarCliente(idCliente);
     if (result) {
       alert('✅ Cliente eliminado');
-      location.reload();
+      cargarDatos();
     }
   }
 
-  async function editarProducto(idProducto) {
+  window.editarProducto = async function(idProducto) {
     const productos = await restaurante.cargarProductos();
     const producto = productos.find(p => p.id_producto === idProducto);
     
@@ -1084,16 +1116,16 @@
     });
     if (result) {
       alert('✅ Producto actualizado');
-      location.reload();
+      cargarDatos();
     }
   }
 
-  async function eliminarProducto(idProducto) {
+  window.eliminarProducto = async function(idProducto) {
     if (!confirm('¿Eliminar este producto?')) return;
     const result = await restaurante.eliminarProducto(idProducto);
     if (result) {
       alert('✅ Producto eliminado');
-      location.reload();
+      cargarDatos();
     }
   }
 </script>
